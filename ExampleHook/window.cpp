@@ -153,6 +153,7 @@ void RenderWindow()
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    bool HiddenWindow = true;
     bool ToggleConsole = true;
     bool SetupWindow = false;
     bool Closed = false;
@@ -231,6 +232,9 @@ void RenderWindow()
                     fclose(stderr);
                 }
             }
+            ImGui::Checkbox("Hide Window", &HiddenWindow);
+            if (HiddenWindow) SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+            else SetWindowDisplayAffinity(hwnd, WDA_NONE);
             ImGui::End();
         }
 
