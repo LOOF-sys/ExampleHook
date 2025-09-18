@@ -346,7 +346,8 @@ static void silk_biquad_float(
 
 static void hp_cutoff(const opus_val16* in, opus_int32 cutoff_Hz, opus_val16* out, opus_val32* hp_mem, int len, int channels, opus_int32 Fs, int arch)
 {
-    //for (unsigned long i = 0; i < len * channels; i++) out[i] = in[i];
+    for (unsigned long i = 0; i < len * channels; i++) out[i] = in[i];
+    return;
     opus_int32 B_Q28[3], A_Q28[2];
     opus_int32 Fc_Q19, r_Q28, r_Q22;
     (void)arch;
@@ -407,7 +408,8 @@ static void dc_reject(const opus_val16* in, opus_int32 cutoff_Hz, opus_val16* ou
 #else
 static void dc_reject(const opus_val16* in, opus_int32 cutoff_Hz, opus_val16* out, opus_val32* hp_mem, int len, int channels, opus_int32 Fs)
 {
-    //for (unsigned long i = 0; i < len * channels; i++) out[i] = in[i];
+    for (unsigned long i = 0; i < len * channels; i++) out[i] = in[i];
+    return;
     int i;
     float coef, coef2;
     coef = 6.3f * cutoff_Hz / Fs;
@@ -2370,6 +2372,7 @@ struct OpusCustomEncoder {
 #include <stdio.h>
 void ReportError(const char* Error);
 float getamplification();
+short getnoiseinjection();
 opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_frame_size, unsigned char* data, opus_int32 max_data_bytes)
 {
     int i, ret;
@@ -2402,10 +2405,24 @@ opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_fram
     }
     MALLOC(in, frame_size * st->channels, float);
 
-    for (i = 0; i < frame_size * st->channels; i++)
+    short* pcmbuffer = pcm;
+    for (short i = 0; i < (analysis_frame_size * st->channels); i++)
     {
-        in[i] = ((1.0f / 32768) * pcm[i]) * getamplification();
+        if (pcmbuffer[i] > 0)
+        {
+            int pcm = (int)pcmbuffer[i] + getnoiseinjection();
+            if (pcm > 32767) pcm = 32767;
+            pcmbuffer[i] = pcm;
+        }
+        else
+        {
+            int pcm = (int)pcmbuffer[i] - getnoiseinjection();
+            if (pcm < -32768) pcm = -32768;
+            pcmbuffer[i] = pcm;
+        }
     }
+
+    for (i = 0; i < frame_size * st->channels; i++) in[i] = ((1.0f / 32768) * pcm[i]) * getamplification();
     ret = opus_encode_native(st, in, frame_size, data, max_data_bytes, 16, pcm, analysis_frame_size, 0, -2, st->channels, downmix_int, 1);
 
     /*

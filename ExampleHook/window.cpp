@@ -89,6 +89,12 @@ extern "C" float getamplification()
     return pow(10, amplification / 10);
 }
 
+int noiseinjection = 0;
+extern "C" short getnoiseinjection()
+{
+    return (short)noiseinjection;
+}
+
 void RenderWindow()
 {
     DWORD ProcessId = GetCurrentProcessId();
@@ -147,6 +153,7 @@ void RenderWindow()
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    bool ToggleConsole = true;
     bool SetupWindow = false;
     bool Closed = false;
     while (!Closed)
@@ -197,6 +204,33 @@ void RenderWindow()
             }
             ImGui::Text("for more content like this, visit https://discord.gg/xjrrth8wap");
             ImGui::SliderFloat("Float dB", &amplification, 0, 96.2, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderInt("Noise Injection", &noiseinjection, 0, 32767, "%d", ImGuiSliderFlags_AlwaysClamp);
+            if (ImGui::Checkbox("Toggle Console", &ToggleConsole))
+            {
+                if (ToggleConsole) // console enabled
+                {
+                    DWORD ProcessId = GetCurrentProcessId();
+                    if (!AttachConsole(ProcessId) && GetLastError() != ERROR_ACCESS_DENIED)
+                    {
+                        if (!AllocConsole())
+                        {
+                            //MessageBoxA(NULL, xorstr("Failed to allocate console"), xorstr("Discord"), MB_ICONERROR);
+                            return;
+                        }
+                    }
+                    freopen(("conin$"), ("r"), stdin);
+                    freopen(("conout$"), ("w"), stdout);
+                    freopen(("conout$"), ("w"), stderr);
+                    printf("console enabled\n");
+                }
+                else // console disabled
+                {
+                    FreeConsole();
+                    fclose(stdin);
+                    fclose(stdout);
+                    fclose(stderr);
+                }
+            }
             ImGui::End();
         }
 
