@@ -183,6 +183,9 @@ void MainFunction(HMODULE ExampleHook)
     SetupExceptionHandler(ExampleHook, ExampleHookInfo.SizeOfImage);
 #endif
 
+    // if you dont want your window to appear immediately just remove this code
+    if (EnableUI) RenderWindow();
+
     while (true)
     {
         if (EnableUI && GetKeyState(VK_F2) & 0x8000) RenderWindow();

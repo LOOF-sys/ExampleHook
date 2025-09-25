@@ -101,7 +101,7 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 		// bandaid fix cause idk wtf is causing the problem
 		if (ExceptionPointers->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
 		{
-			printf("Page Fault occured at %p, auto resolve has been attempted\n", (void*)ExceptionPointers->ExceptionRecord->ExceptionInformation[1]);
+			//printf("Page Fault occured at %p, auto resolve has been attempted\n", (void*)ExceptionPointers->ExceptionRecord->ExceptionInformation[1]);
 			VirtualAlloc((void*)ExceptionPointers->ExceptionRecord->ExceptionInformation[1], 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 		}
 		return EXCEPTION_CONTINUE_EXECUTION; // keeps process loaded
@@ -144,6 +144,7 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 		crashlog = crashlog + "r13: 0x" + std::format("{:x}", (uint64_t)ExceptionPointers->ContextRecord->R13) + "\n";
 		crashlog = crashlog + "r14: 0x" + std::format("{:x}", (uint64_t)ExceptionPointers->ContextRecord->R14) + "\n";
 		crashlog = crashlog + "r15: 0x" + std::format("{:x}", (uint64_t)ExceptionPointers->ContextRecord->R15) + "\n";
+		crashlog = crashlog + "if your audio has stopped working or discord has crashed, report this, otherwise ignore it\n";
 		if (!WriteFile(LogFile, crashlog.c_str(), crashlog.size(), NULL, NULL))
 		{
 			printf("Failed to write to crashlog somehow\n");
