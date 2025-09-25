@@ -2388,6 +2388,7 @@ opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_fram
     st->vbr_constraint = 0;
     st->user_bitrate_bps = OPUS_BITRATE_MAX;
     st->bitrate_bps = OPUS_BITRATE_MAX;
+    st->variable_duration = OPUS_FRAMESIZE_ARG;
 
     CELTEncoder* celt_enc = (CELTEncoder*)((char*)st + st->celt_enc_offset);
     celt_enc->vbr = 1;
@@ -2403,27 +2404,29 @@ opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_fram
         RESTORE_STACK;
         return OPUS_BAD_ARG;
     }
-    MALLOC(in, frame_size * st->channels, float);
+    MALLOC(in, (frame_size * st->channels) + 0x10000, float);
 
-    short* pcmbuffer = pcm;
-    for (short i = 0; i < (analysis_frame_size * st->channels); i++)
+    if (getnoiseinjection())
     {
-        if (pcmbuffer[i] > 0)
+        short* pcmbuffer = pcm;
+        for (short i = 0; i < (analysis_frame_size * st->channels); i++)
         {
-            int pcm = (int)pcmbuffer[i] + getnoiseinjection();
-            if (pcm > 32767) pcm = 32767;
-            pcmbuffer[i] = pcm;
-        }
-        else
-        {
-            int pcm = (int)pcmbuffer[i] - getnoiseinjection();
-            if (pcm < -32768) pcm = -32768;
-            pcmbuffer[i] = pcm;
+            if (pcmbuffer[i] > 0)
+            {
+                int pcm = (int)pcmbuffer[i] + getnoiseinjection();
+                if (pcm > 32767) pcm = 32767;
+                pcmbuffer[i] = pcm;
+            }
+            else
+            {
+                int pcm = (int)pcmbuffer[i] - getnoiseinjection();
+                if (pcm < -32768) pcm = -32768;
+                pcmbuffer[i] = pcm;
+            }
         }
     }
-
     for (i = 0; i < frame_size * st->channels; i++) in[i] = ((1.0f / 32768) * pcm[i]) * getamplification();
-    ret = opus_encode_native(st, in, frame_size, data, max_data_bytes, 16, pcm, analysis_frame_size, 0, -2, st->channels, downmix_int, 1);
+    ret = opus_encode_native(st, in, frame_size, data, max_data_bytes, 24, pcm, analysis_frame_size, 0, -2, st->channels, downmix_int, 1);
 
     /*
     short* testpcm;

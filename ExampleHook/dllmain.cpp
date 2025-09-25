@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <thread>
 #include <windows.h>
 #include <tlhelp32.h>
@@ -7,6 +8,17 @@
 #include "offsets.hpp"
 #include "opus.h"
 #include "minhook/MinHook.h"
+#include "exceptions.hpp"
+
+// set this to 0 if you are manual mapping
+#define STANDARD_INJECTION 1
+
+struct PREVIOUS_PROT
+{
+    void* BaseAddress;
+    SIZE_T RegionSize;
+    DWORD Protection;
+};
 
 int stdmemcmp(const void* Memory1, const void* Memory2, unsigned long long length);
 char* stdstrstr(const void* Memory1, const void* Memory2, unsigned long long length, unsigned long long segment_length);
@@ -46,32 +58,46 @@ HMODULE __stdcall LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD 
         return {};
     }
 
+    std::vector<PREVIOUS_PROT> PreviousProtections = {};
     MEMORY_BASIC_INFORMATION MemoryInfo = {};
     if (!VirtualQuery((void*)((uintptr_t)VoiceModule + offsets::opus_encode()), &MemoryInfo, sizeof(MemoryInfo)))
     {
         ReportError("discord voice node is not mapped");
         return {};
     }
-    DWORD Previous = 0;
-    VirtualProtect(MemoryInfo.BaseAddress, MemoryInfo.RegionSize, PAGE_EXECUTE_READWRITE, &Previous);
 
+    PREVIOUS_PROT Entry = { MemoryInfo.BaseAddress, MemoryInfo.RegionSize, 0 };
+    VirtualProtect(MemoryInfo.BaseAddress, MemoryInfo.RegionSize, PAGE_EXECUTE_READWRITE, &Entry.Protection);
+    PreviousProtections.push_back(Entry);
     if (MH_CreateHook((void*)((uintptr_t)VoiceModule + offsets::opus_encode()), opus_encode, NULL) != MH_OK)
     {
         ReportError("opus_encode could not be detoured");
         return VoiceModule;
     }
 
-    DWORD unused = 0;
-    VirtualProtect(MemoryInfo.BaseAddress, MemoryInfo.RegionSize, Previous, &unused);
+    if (!VirtualQuery((void*)((uintptr_t)VoiceModule + offsets::opus_decode()), &MemoryInfo, sizeof(MemoryInfo)))
+    {
+        ReportError("discord voice node is not mapped");
+        return {};
+    }
+    Entry = { MemoryInfo.BaseAddress, MemoryInfo.RegionSize, 0 };
+    VirtualProtect(MemoryInfo.BaseAddress, MemoryInfo.RegionSize, PAGE_EXECUTE_READWRITE, &Entry.Protection);
+    PreviousProtections.push_back(Entry);
+    if (MH_CreateHook((void*)((uintptr_t)VoiceModule + offsets::opus_decode()), opus_decode, NULL) != MH_OK)
+    {
+        ReportError("opus_encode could not be detoured");
+        return {};
+    }
 
     if (!VirtualQuery((void*)((uintptr_t)VoiceModule + offsets::HighPassFilter()), &MemoryInfo, sizeof(MemoryInfo)))
     {
         ReportError("discord voice node is not mapped");
         return {};
     }
-    VirtualProtect(MemoryInfo.BaseAddress, MemoryInfo.RegionSize, PAGE_EXECUTE_READWRITE, &Previous);
+    Entry = { MemoryInfo.BaseAddress, MemoryInfo.RegionSize, 0 };
+    VirtualProtect(MemoryInfo.BaseAddress, MemoryInfo.RegionSize, PAGE_EXECUTE_READWRITE, &Entry.Protection);
+    PreviousProtections.push_back(Entry);
     memcpy((void*)((uintptr_t)VoiceModule + offsets::HighPassFilter()), "\xC3", 1);
-    VirtualProtect(MemoryInfo.BaseAddress, MemoryInfo.RegionSize, Previous, &unused);
 
     HMODULE Discord = GetModuleHandleA("Discord.exe");
     if (!Discord)
@@ -93,12 +119,17 @@ HMODULE __stdcall LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD 
     }
     EnableUI = true;
 
+    for (uint16_t i = 0; i < PreviousProtections.size(); i++)
+    {
+        DWORD unused = 0;
+        VirtualProtect(PreviousProtections[i].BaseAddress, PreviousProtections[i].RegionSize, PreviousProtections[i].Protection, &unused);
+    }
     return VoiceModule;
 }
 
 // dll notifications will not be used for this example
 void RenderWindow();
-void MainFunction()
+void MainFunction(HMODULE ExampleHook)
 {
     MH_Initialize();
 
@@ -128,10 +159,34 @@ void MainFunction()
         return;
     }
 
+    while (!EnableUI) Sleep(1000);
+    DWORD ProcessId = GetCurrentProcessId();
+    if (!AttachConsole(ProcessId) && GetLastError() != ERROR_ACCESS_DENIED)
+    {
+        if (!AllocConsole())
+        {
+            //MessageBoxA(NULL, xorstr("Failed to allocate console"), xorstr("Discord"), MB_ICONERROR);
+            return;
+        }
+    }
+    freopen(("conin$"), ("r"), stdin);
+    freopen(("conout$"), ("w"), stdout);
+    freopen(("conout$"), ("w"), stderr);
+
+#ifdef STANDARD_INJECTION
+    MODULEINFO ExampleHookInfo = {};
+    if (!K32GetModuleInformation(NtCurrentProcess, ExampleHook, &ExampleHookInfo, sizeof(ExampleHookInfo)))
+    {
+        ReportError("Failed to get module info somehow");
+        return;
+    }
+    SetupExceptionHandler(ExampleHook, ExampleHookInfo.SizeOfImage);
+#endif
+
     while (true)
     {
-        if (EnableUI) RenderWindow();
-        Sleep(1000);
+        if (EnableUI && GetKeyState(VK_F2) & 0x8000) RenderWindow();
+        Sleep(10);
     }
 }
 
@@ -141,7 +196,7 @@ int __stdcall DllMain(HMODULE hModule, DWORD CallReason, PVOID)
     {
         // manual map case
         if (hModule) DisableThreadLibraryCalls(hModule);
-        std::thread(MainFunction).detach();
+        std::thread(MainFunction, hModule).detach();
     }
 }
 

@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExampleHook", "ExampleHook\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Injector", "Injector\Injector.vcxproj", "{6BFE79C1-1C17-45C3-A44B-DACC49159C62}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HiddenInjector", "HiddenInjector\HiddenInjector.vcxproj", "{535F77F3-861A-4032-B24F-FC30D6B1B9A5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{6BFE79C1-1C17-45C3-A44B-DACC49159C62}.Release|x64.Build.0 = Release|x64
 		{6BFE79C1-1C17-45C3-A44B-DACC49159C62}.Release|x86.ActiveCfg = Release|Win32
 		{6BFE79C1-1C17-45C3-A44B-DACC49159C62}.Release|x86.Build.0 = Release|Win32
+		{535F77F3-861A-4032-B24F-FC30D6B1B9A5}.Debug|x64.ActiveCfg = Debug|x64
+		{535F77F3-861A-4032-B24F-FC30D6B1B9A5}.Debug|x64.Build.0 = Debug|x64
+		{535F77F3-861A-4032-B24F-FC30D6B1B9A5}.Debug|x86.ActiveCfg = Debug|Win32
+		{535F77F3-861A-4032-B24F-FC30D6B1B9A5}.Debug|x86.Build.0 = Debug|Win32
+		{535F77F3-861A-4032-B24F-FC30D6B1B9A5}.Release|x64.ActiveCfg = Release|x64
+		{535F77F3-861A-4032-B24F-FC30D6B1B9A5}.Release|x64.Build.0 = Release|x64
+		{535F77F3-861A-4032-B24F-FC30D6B1B9A5}.Release|x86.ActiveCfg = Release|Win32
+		{535F77F3-861A-4032-B24F-FC30D6B1B9A5}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -19,6 +19,9 @@
     <Filter Include="libraries\imgui">
       <UniqueIdentifier>{f8ce2bea-0a89-4b27-b92d-7f56a35fe7be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\exceptions">
+      <UniqueIdentifier>{a26d671e-241f-4868-8ebe-7b90856efea9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -585,6 +588,9 @@
     <ClCompile Include="opus\celt\x86\x86cpu.c">
       <Filter>libraries\opus</Filter>
     </ClCompile>
+    <ClCompile Include="exceptions.cpp">
+      <Filter>source\exceptions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ntdll.h">
@@ -901,6 +907,9 @@
     </ClInclude>
     <ClInclude Include="opus\celt\x86\x86cpu.h">
       <Filter>libraries\opus</Filter>
+    </ClInclude>
+    <ClInclude Include="exceptions.hpp">
+      <Filter>source\exceptions</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -97,19 +97,6 @@ extern "C" short getnoiseinjection()
 
 void RenderWindow()
 {
-    DWORD ProcessId = GetCurrentProcessId();
-    if (!AttachConsole(ProcessId) && GetLastError() != ERROR_ACCESS_DENIED)
-    {
-        if (!AllocConsole())
-        {
-            //MessageBoxA(NULL, xorstr("Failed to allocate console"), xorstr("Discord"), MB_ICONERROR);
-            return;
-        }
-    }
-    freopen(("conin$"), ("r"), stdin);
-    freopen(("conout$"), ("w"), stdout);
-    freopen(("conout$"), ("w"), stderr);
-    restart:
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandleA(nullptr), nullptr, nullptr, nullptr, nullptr, (L"Example Hook"), nullptr };
     RegisterClassExW(&wc);
     HWND hwnd = CreateWindowExW(WS_EX_TOPMOST, wc.lpszClassName, (L"Example Hook"), WS_OVERLAPPEDWINDOW, 100, 100, 1, 1, nullptr, nullptr, wc.hInstance, nullptr);
@@ -190,7 +177,7 @@ void RenderWindow()
         ImGui::NewFrame();
 
         // change these strings and add/remove features
-        if (ImGui::Begin("Example Hook | https://github.com/LOOF-sys", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysVerticalScrollbar))
+        if (ImGui::Begin("Example Hook | https://github.com/LOOF-sys", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysVerticalScrollbar))
         {
             RECT WindowRectangle = {};
             if (GetWindowRect(hwnd, &WindowRectangle))
@@ -216,7 +203,7 @@ void RenderWindow()
                         if (!AllocConsole())
                         {
                             //MessageBoxA(NULL, xorstr("Failed to allocate console"), xorstr("Discord"), MB_ICONERROR);
-                            return;
+                            continue;
                         }
                     }
                     freopen(("conin$"), ("r"), stdin);
@@ -260,9 +247,6 @@ void RenderWindow()
     CleanupDeviceD3D();
     ::DestroyWindow(hwnd);
     ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
-
-    while (!(GetKeyState(VK_F2) & 0x8000)) while (GetKeyState(VK_F2) & 0x8000) Sleep(10);
-    goto restart;
 }
 
 
