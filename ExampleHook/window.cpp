@@ -35,53 +35,6 @@ MOST OF THIS IS PASTED FROM AETHERCORD
 MOST OF THIS IS PASTED FROM AETHERCORD
 */
 
-/*
-
-#include <stdio.h>
-void ReportError(const char* Error);
-float getamplification();
-opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_frame_size, unsigned char* data, opus_int32 max_data_bytes)
-{
-    int i, ret;
-    int frame_size;
-    VARDECL(float, in);
-    ALLOC_STACK;
-
-    st->mode = MODE_CELT_ONLY;
-    st->use_vbr = 1;
-    st->vbr_constraint = 0;
-    st->user_bitrate_bps = OPUS_BITRATE_MAX;
-    st->bitrate_bps = OPUS_BITRATE_MAX;
-
-    CELTEncoder* celt_enc = (CELTEncoder*)((char*)st + st->celt_enc_offset);
-    celt_enc->vbr = 1;
-    celt_enc->constrained_vbr = 0;
-    celt_enc->bitrate = OPUS_BITRATE_MAX;
-    celt_enc->complexity = 10;
-    celt_enc->clip = 0;
-
-    printf("%lu, %lu, %lu\n", analysis_frame_size, st->variable_duration, st->Fs);
-
-    frame_size = frame_size_select(analysis_frame_size, st->variable_duration, st->Fs);
-    if (frame_size <= 0)
-    {
-        RESTORE_STACK;
-        return OPUS_BAD_ARG;
-    }
-    ALLOC(in, frame_size * st->channels, float);
-
-    for (i = 0; i < frame_size * st->channels; i++)
-    {
-        in[i] = ((1.0f / 32768) * pcm[i]) * getamplification();
-    }
-    //ReportError("encoding");
-    ret = opus_encode_native(st, in, frame_size, data, max_data_bytes, 16, pcm, analysis_frame_size, 0, -2, st->channels, downmix_int, 1);
-    //ReportError("did encode");
-    RESTORE_STACK;
-    return ret;
-}
-*/
-
 float amplification = 0;
 extern "C" float getamplification()
 {

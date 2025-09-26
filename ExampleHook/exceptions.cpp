@@ -3,6 +3,7 @@
 #include <string>
 #include <format>
 #include <windows.h>
+#include "ntdll.h"
 
 void* BaseAddress = nullptr;
 uint64_t LoadedModuleSize = 0;
@@ -65,7 +66,6 @@ bool IsAddressValid(void* VirtualAddress)
 	return (MemoryInfo.Protect != PAGE_NOACCESS && MemoryInfo.State != MEM_FREE);
 }
 
-
 void AnalyzeStack(std::string &crashlog, void* StackAddress)
 {
 	std::vector<void*> values = {};
@@ -96,22 +96,12 @@ bool Crashed = false;
 extern "C" void ReportError(LPCSTR Error);
 LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 {
-	if (Crashed)
-	{
-		// bandaid fix cause idk wtf is causing the problem
-		if (ExceptionPointers->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
-		{
-			//printf("Page Fault occured at %p, auto resolve has been attempted\n", (void*)ExceptionPointers->ExceptionRecord->ExceptionInformation[1]);
-			VirtualAlloc((void*)ExceptionPointers->ExceptionRecord->ExceptionInformation[1], 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-		}
-		return EXCEPTION_CONTINUE_EXECUTION; // keeps process loaded
-	}
-
+	if (Crashed) return EXCEPTION_CONTINUE_EXECUTION; // keeps process loaded
 	if (ExceptionPointers->ExceptionRecord->ExceptionAddress >= BaseAddress && ((uint64_t)BaseAddress) + LoadedModuleSize >= (uint64_t)ExceptionPointers->ExceptionRecord->ExceptionAddress)
 	{
 		SYSTEMTIME SystemTime = {};
 		GetSystemTime(&SystemTime);
-		std::string filename = "exceptionlog_";
+		std::string filename = "crashlog_";
 		filename = filename + std::to_string(SystemTime.wMilliseconds) + "-" + std::to_string(SystemTime.wMinute) + "-" + std::to_string(SystemTime.wHour) + "-" + std::to_string(SystemTime.wDay) + "-" + std::to_string(SystemTime.wMonth) + "-" + std::to_string(SystemTime.wYear) + ".txt";
 		HANDLE LogFile = CreateFileA(filename.c_str(), GENERIC_READ | GENERIC_WRITE, NULL, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (LogFile == INVALID_HANDLE_VALUE)
@@ -121,7 +111,7 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 			return 0;
 		}
 
-		std::string crashlog = "Potential fatal error has just occured\nCurrent BaseAddress: 0x" + std::format("{:x}", (uint64_t)BaseAddress) + ", ImageSize: 0x" + std::format("{:x}", LoadedModuleSize) + "\nException Code: " + GetExceptionCodeAsString(ExceptionPointers->ExceptionRecord->ExceptionCode) + "\n";
+		std::string crashlog = "Crash Report\nCurrent BaseAddress: 0x" + std::format("{:x}", (uint64_t)BaseAddress) + ", ImageSize: 0x" + std::format("{:x}", LoadedModuleSize) + "\nException Code: " + GetExceptionCodeAsString(ExceptionPointers->ExceptionRecord->ExceptionCode) + "\n";
 		auto StackAddress = (void*)ExceptionPointers->ContextRecord->Rsp;
 		void* ExceptionAddress = ExceptionPointers->ExceptionRecord->ExceptionAddress;
 		if (ExceptionPointers->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
@@ -144,7 +134,7 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 		crashlog = crashlog + "r13: 0x" + std::format("{:x}", (uint64_t)ExceptionPointers->ContextRecord->R13) + "\n";
 		crashlog = crashlog + "r14: 0x" + std::format("{:x}", (uint64_t)ExceptionPointers->ContextRecord->R14) + "\n";
 		crashlog = crashlog + "r15: 0x" + std::format("{:x}", (uint64_t)ExceptionPointers->ContextRecord->R15) + "\n";
-		crashlog = crashlog + "if your audio has stopped working or discord has crashed, report this, otherwise ignore it\n";
+		crashlog = crashlog + "send this crash report to the discord\n";
 		if (!WriteFile(LogFile, crashlog.c_str(), crashlog.size(), NULL, NULL))
 		{
 			printf("Failed to write to crashlog somehow\n");
@@ -153,6 +143,7 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 		}
 		Crashed = true;
 		std::cout << crashlog << std::endl;
+		NtSuspendProcess(NtCurrentProcess);
 		return EXCEPTION_CONTINUE_EXECUTION;
 	}
 	return 0;

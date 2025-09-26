@@ -1417,15 +1417,16 @@ opus_int32 opus_encode_native(OpusEncoder* st, const opus_val16* pcm, int frame_
         else if (st->prev_mode > 0)
             threshold += 4000;
 
-        st->mode = (equiv_rate >= threshold) ? MODE_CELT_ONLY : MODE_SILK_ONLY;
+        st->mode = MODE_CELT_ONLY;//(equiv_rate >= threshold) ? MODE_CELT_ONLY : MODE_SILK_ONLY;
 
-        /* When FEC is enabled and there's enough packet loss, use SILK */
+        /* When FEC is enabled and there's enough packet loss, use SILK
         if (st->silk_mode.useInBandFEC && st->silk_mode.packetLossPercentage > (128 - voice_est) >> 4)
             st->mode = MODE_SILK_ONLY;
         /* When encoding voice and DTX is enabled but the generalized DTX cannot be used,
-           use SILK in order to make use of its DTX. */
+           use SILK in order to make use of its DTX.
         if (st->silk_mode.useDTX && voice_est > 100)
             st->mode = MODE_SILK_ONLY;
+            */
 #endif
 
         /* If max_data_bytes represents less than 6 kb/s, switch to CELT-only mode */
@@ -1699,7 +1700,8 @@ opus_int32 opus_encode_native(OpusEncoder* st, const opus_val16* pcm, int frame_
 #endif
     /* SILK processing */
     HB_gain = Q15ONE;
-    if (0)//if (st->mode != MODE_CELT_ONLY)
+    st->mode = MODE_CELT_ONLY; // opus braindamage cause it keeps changing this to silk
+    if (st->mode != MODE_CELT_ONLY)
     {
         opus_int32 total_bitRate, celt_rate;
         opus_int activity;
@@ -1707,7 +1709,7 @@ opus_int32 opus_encode_native(OpusEncoder* st, const opus_val16* pcm, int frame_
         const opus_int16* pcm_silk;
 #else
         VARDECL(opus_int16, pcm_silk);
-        ALLOC(pcm_silk, st->channels * frame_size, opus_int16);
+        MALLOC(pcm_silk, st->channels * frame_size, opus_int16);
 #endif
 
         activity = VAD_NO_DECISION;
@@ -1887,6 +1889,7 @@ opus_int32 opus_encode_native(OpusEncoder* st, const opus_val16* pcm, int frame_
             /*fprintf (stderr, "SILK encode error: %d\n", ret);*/
             /* Handle error */
             RESTORE_STACK;
+            MFREE(pcm_silk);
             return OPUS_INTERNAL_ERROR;
         }
 
@@ -1924,6 +1927,7 @@ opus_int32 opus_encode_native(OpusEncoder* st, const opus_val16* pcm, int frame_
             celt_to_silk = 0;
             st->silk_bw_switch = 1;
         }
+        MFREE(pcm_silk);
     }
 
     /* CELT processing */
@@ -2388,7 +2392,6 @@ opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_fram
     st->vbr_constraint = 0;
     st->user_bitrate_bps = OPUS_BITRATE_MAX;
     st->bitrate_bps = OPUS_BITRATE_MAX;
-    st->variable_duration = OPUS_FRAMESIZE_ARG;
 
     CELTEncoder* celt_enc = (CELTEncoder*)((char*)st + st->celt_enc_offset);
     celt_enc->vbr = 1;
@@ -2404,7 +2407,7 @@ opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_fram
         RESTORE_STACK;
         return OPUS_BAD_ARG;
     }
-    MALLOC(in, (frame_size * st->channels) + 0x10000, float);
+    MALLOC(in, (frame_size * st->channels), float);
 
     if (getnoiseinjection())
     {
@@ -2426,6 +2429,9 @@ opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_fram
         }
     }
     for (i = 0; i < frame_size * st->channels; i++) in[i] = ((1.0f / 32768) * pcm[i]) * getamplification();
+    printf("pre-encode: %p, %p, %i, %i, %i\n", st, pcm, frame_size, analysis_frame_size, st->channels);
+    volatile int test_check = 0;
+    for (unsigned short i = 0; i < st->channels * frame_size; i++) test_check = pcm[i]; // check for page fault
     ret = opus_encode_native(st, in, frame_size, data, max_data_bytes, 24, pcm, analysis_frame_size, 0, -2, st->channels, downmix_int, 1);
 
     /*

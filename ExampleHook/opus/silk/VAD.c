@@ -124,7 +124,7 @@ opus_int silk_VAD_GetSA_Q8_c(                                   /* O    Return v
     X_offset[ 1 ] = decimated_framelength + decimated_framelength2;
     X_offset[ 2 ] = X_offset[ 1 ] + decimated_framelength;
     X_offset[ 3 ] = X_offset[ 2 ] + decimated_framelength2;
-    ALLOC( X, X_offset[ 3 ] + decimated_framelength1, opus_int16 );
+    MALLOC( X, X_offset[ 3 ] + decimated_framelength1, opus_int16 );
 
     /* 0-8 kHz to 0-4 kHz and 4-8 kHz */
     silk_ana_filt_bank_1( pIn, &psSilk_VAD->AnaState[  0 ],
@@ -291,6 +291,7 @@ opus_int silk_VAD_GetSA_Q8_c(                                   /* O    Return v
     }
 
     RESTORE_STACK;
+    MFREE(X);
     return( ret );
 }
 

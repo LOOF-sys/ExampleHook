@@ -29,13 +29,24 @@ bool InitializeNodeApiHooks(HMODULE Discord);
 
 extern "C" __declspec(noinline) void __cdecl _alloc(unsigned long amount, void** dest)
 {
+    if (!amount) amount = 0x1000;
     PVOID Address = VirtualAlloc(nullptr, amount, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (!Address)
+    {
+        printf("FATAL ERROR - ALLOCATION FAILED WITH CODE: %i\n", GetLastError());
+        return;
+    }
     *dest = Address;
 }
 
 extern "C" __declspec(noinline) int __cdecl _dealloc(void* address)
 {
-    return VirtualFree(address, 0, MEM_RELEASE);
+    if (!VirtualFree(address, 0, MEM_RELEASE))
+    {
+        printf("DEALLOCATION OF %p FAILE WITH CODE: %i\n", address, GetLastError());
+        return false;
+    }
+    return true;
 }
 
 // keeping it simple for users

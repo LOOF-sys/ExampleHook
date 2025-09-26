@@ -333,42 +333,35 @@ opus_val16 op_pvq_search_c(celt_norm* X, int* iy, int K, int N, int arch)
 unsigned alg_quant(celt_norm* X, int N, int K, int spread, int B, ec_enc* enc,
     opus_val16 gain, int resynth, int arch)
 {
-    __try
+    VARDECL(int, iy);
+    opus_val16 yy;
+    unsigned collapse_mask;
+    SAVE_STACK;
+
+    celt_assert2(K > 0, "alg_quant() needs at least one pulse");
+    celt_assert2(N > 1, "alg_quant() needs at least two dimensions");
+
+    /* Covers vectorization by up to 4. */
+    MALLOC(iy, N + 3, int);
+    printf("alg_quant, %p, %p, %i\n", iy, X, N);
+
+    exp_rotation(X, N, 1, B, K, spread);
+
+    yy = op_pvq_search(X, iy, K, N, arch);
+
+    encode_pulses(iy, N, K, enc);
+
+    if (resynth)
     {
-        VARDECL(int, iy);
-        opus_val16 yy;
-        unsigned collapse_mask;
-        SAVE_STACK;
-
-        celt_assert2(K > 0, "alg_quant() needs at least one pulse");
-        celt_assert2(N > 1, "alg_quant() needs at least two dimensions");
-
-        /* Covers vectorization by up to 4. */
-        MALLOC(iy, N + 3, int);
-
-        exp_rotation(X, N, 1, B, K, spread);
-
-        yy = op_pvq_search(X, iy, K, N, arch);
-
-        encode_pulses(iy, N, K, enc);
-
-        if (resynth)
-        {
-            normalise_residual(iy, X, N, yy, gain);
-            exp_rotation(X, N, -1, B, K, spread);
-        }
-
-        collapse_mask = extract_collapse_mask(iy, N, B);
-        RESTORE_STACK;
-        MFREE(iy);
-
-        return collapse_mask;
+        normalise_residual(iy, X, N, yy, gain);
+        exp_rotation(X, N, -1, B, K, spread);
     }
-    __except (1)
-    {
-        printf("fatal error in alg_quant for %p\n", X);
-        return 0;
-    }
+
+    collapse_mask = extract_collapse_mask(iy, N, B);
+    RESTORE_STACK;
+    MFREE(iy);
+    printf("deallocated \"iy\" %p\n", iy);
+    return collapse_mask;
 }
 
 /** Decode pulse vector and combine the result with the pitch vector to produce
