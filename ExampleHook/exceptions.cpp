@@ -52,6 +52,8 @@ std::string GetExceptionCodeAsString(DWORD Code)
 		return "EXCEPTION_SINGLE_STEP";
 	case EXCEPTION_STACK_OVERFLOW:
 		return "EXCEPTION_STACK_OVERFLOW";
+	case 0xC0000374:
+		return "STATUS_HEAP_CORRUPTION";
 	default:
 		return "UNDEFINED";
 	}
@@ -92,11 +94,55 @@ completed:
 	return;
 }
 
+uint8_t eVoiceEncoderThreads = 0;
+PDWORD VoiceEncoderThreads = {};
+bool* VoiceEncoderStates = {};
+extern "C" void InsertVoiceThread()
+{
+	VoiceEncoderThreads[eVoiceEncoderThreads++] = GetCurrentThreadId();
+}
+
+extern "C" bool IsVoiceThreadInserted()
+{
+	DWORD ThreadId = GetCurrentThreadId();
+	for (uint8_t i = 0; i < eVoiceEncoderThreads; i++) if (VoiceEncoderThreads[i] == ThreadId) return true;
+	return false;
+}
+
+extern "C" bool IsPrimaryVoiceThread()
+{
+	return (GetCurrentThreadId() == VoiceEncoderThreads[0]);
+}
+
+extern "C" void ChangeEncoderState(bool PreEncoding)
+{
+	for (uint8_t i = 0; i < eVoiceEncoderThreads; i++) if (VoiceEncoderThreads[i] == GetCurrentThreadId()) VoiceEncoderStates[i] = PreEncoding;
+}
+
+// dumps a section of memory to file
+void CreateMemoryReport(void* VirtualAddress)
+{
+
+}
+
 bool Crashed = false;
 extern "C" void ReportError(LPCSTR Error);
 LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 {
 	if (Crashed) return EXCEPTION_CONTINUE_EXECUTION; // keeps process loaded
+	bool VoiceThread = false;
+	DWORD ThreadId = GetCurrentThreadId();
+	for (uint8_t i = 0; i < eVoiceEncoderThreads; i++)
+	{
+		if (VoiceEncoderThreads[i] == ThreadId)
+		{
+			VoiceThread = true;
+			printf("VoiceThread: %i, Encoder state: %i\n", VoiceEncoderThreads[i], VoiceEncoderStates[i]);
+			break;
+		}
+	}
+
+	// VoiceThread not used anymore for debugging
 	if (ExceptionPointers->ExceptionRecord->ExceptionAddress >= BaseAddress && ((uint64_t)BaseAddress) + LoadedModuleSize >= (uint64_t)ExceptionPointers->ExceptionRecord->ExceptionAddress)
 	{
 		SYSTEMTIME SystemTime = {};
@@ -142,6 +188,7 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 			return 0;
 		}
 		Crashed = true;
+
 		std::cout << crashlog << std::endl;
 		NtSuspendProcess(NtCurrentProcess);
 		return EXCEPTION_CONTINUE_EXECUTION;
@@ -153,6 +200,14 @@ void SetupExceptionHandler(HMODULE ExampleHook, uint64_t ImageSize)
 {
 	BaseAddress = ExampleHook;
 	LoadedModuleSize = ImageSize;
+	VoiceEncoderThreads = (PDWORD)VirtualAlloc(nullptr, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	VoiceEncoderStates = (bool*)VirtualAlloc(nullptr, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	if (!VoiceEncoderThreads || !VoiceEncoderStates)
+	{
+		printf("failed to allocate VoiceEncoderPools\n");
+		return;
+	}
+
 	HANDLE ExceptionHandler = AddVectoredExceptionHandler(0, VectoredExceptionHandler);
 	if (!ExceptionHandler)
 	{

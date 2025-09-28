@@ -25,7 +25,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -225,10 +226,10 @@ void silk_stereo_LR_to_MS(
     state->pred_prev_Q13[ 0 ] = (opus_int16)pred_Q13[ 0 ];
     state->pred_prev_Q13[ 1 ] = (opus_int16)pred_Q13[ 1 ];
     state->width_prev_Q14     = (opus_int16)width_Q14;
-    RESTORE_STACK;
-    MFREE(side);
     MFREE(LP_mid);
     MFREE(HP_mid);
+    MFREE(side);
     MFREE(LP_side);
     MFREE(HP_side);
+    RESTORE_STACK;
 }

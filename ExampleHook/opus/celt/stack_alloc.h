@@ -35,7 +35,9 @@
 #include "opus_types.h"
 #include "opus_defines.h"
 
-#define USE_ALLOCA
+#ifndef USE_ALLOCA
+#define USE_ALLOCA 1
+#endif
 
 #if (!defined (VAR_ARRAYS) && !defined (USE_ALLOCA) && !defined (NONTHREADSAFE_PSEUDOSTACK))
 #error "Opus requires one of VAR_ARRAYS, USE_ALLOCA, or NONTHREADSAFE_PSEUDOSTACK be defined to select the temporary allocation mode."
@@ -52,6 +54,9 @@
 #  endif
 # endif
 #endif
+
+void __cdecl _alloc(unsigned long amount, void** dest);
+int __cdecl _dealloc(void* address);
 
 /**
  * @def ALIGN(stack, size)
@@ -104,15 +109,9 @@
 
 #define VARDECL(type, var) type *var
 
-# ifdef WIN32
-#  define ALLOC(var, size, type) var = ((type*)_alloca(sizeof(type)*(size)))
-#  define MALLOC(var, size, type) _alloc(sizeof(type)*(size), (void**)&var)
-#  define MFREE(var) _dealloc(var)
-# else
-#  define ALLOC(var, size, type) var = ((type*)alloca(sizeof(type)*(size)))
-#  define MALLOC(var, size, type) _alloc(sizeof(type)*(size), (void**)&var)
-#  define MFREE(var) _dealloc(var)
-# endif
+#define ALLOC(var, size, type) var = ((type*)_malloca(sizeof(type)*(size)))
+#define MALLOC(var, size, type) _alloc(sizeof(type)*(size), (void**)&var)
+#define MFREE(var) _dealloc(var)
 
 #define SAVE_STACK
 #define RESTORE_STACK

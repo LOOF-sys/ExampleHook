@@ -25,7 +25,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-#ifndef HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -42,8 +42,8 @@ void silk_warped_autocorrelation_FLP(
 {
     opus_int    n, i;
     double      tmp1, tmp2;
-    double      state[ MAX_SHAPE_LPC_ORDER + 1 ] = { 0 };
-    double      C[     MAX_SHAPE_LPC_ORDER + 1 ] = { 0 };
+    double      state[ MAX_SHAPE_LPC_ORDER + 1 ] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+    double      C[     MAX_SHAPE_LPC_ORDER + 1 ] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
     /* Order must be even */
     celt_assert( ( order & 1 ) == 0 );

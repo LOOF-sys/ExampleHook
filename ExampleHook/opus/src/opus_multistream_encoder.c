@@ -25,7 +25,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -864,11 +865,11 @@ int opus_multistream_encode_native
       RESTORE_STACK;
       return OPUS_BUFFER_TOO_SMALL;
    }
-   MALLOC(buf, 2*frame_size, opus_val16);
+   ALLOC(buf, 2*frame_size, opus_val16);
    coupled_size = opus_encoder_get_size(2);
    mono_size = opus_encoder_get_size(1);
 
-   MALLOC(bandSMR, 21*st->layout.nb_channels, opus_val16);
+   ALLOC(bandSMR, 21*st->layout.nb_channels, opus_val16);
    if (st->mapping_type == MAPPING_TYPE_SURROUND)
    {
       surround_analysis(celt_mode, pcm, bandSMR, mem, preemph_mem, frame_size, 120, st->layout.nb_channels, Fs, copy_channel_in, st->arch);
@@ -991,8 +992,6 @@ int opus_multistream_encode_native
       if (len<0)
       {
          RESTORE_STACK;
-         MFREE(buf);
-         MFREE(bandSMR);
          return len;
       }
       /* We need to use the repacketizer to add the self-delimiting lengths
@@ -1004,8 +1003,6 @@ int opus_multistream_encode_native
       if (ret != OPUS_OK)
       {
          RESTORE_STACK;
-         MFREE(buf);
-         MFREE(bandSMR);
          return OPUS_INTERNAL_ERROR;
       }
       len = opus_repacketizer_out_range_impl(&rp, 0, opus_repacketizer_get_nb_frames(&rp),
@@ -1015,8 +1012,6 @@ int opus_multistream_encode_native
    }
    /*printf("\n");*/
    RESTORE_STACK;
-   MFREE(buf);
-   MFREE(bandSMR);
    return tot_size;
 }
 
@@ -1258,7 +1253,7 @@ int opus_multistream_encoder_ctl_va_list(OpusMSEncoder *st, int request,
       OpusEncoder **value;
       stream_id = va_arg(ap, opus_int32);
       if (stream_id<0 || stream_id >= st->layout.nb_streams)
-         goto bad_arg;
+         ret = OPUS_BAD_ARG;
       value = va_arg(ap, OpusEncoder**);
       if (!value)
       {

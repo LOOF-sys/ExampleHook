@@ -25,7 +25,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-#ifndef HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -70,7 +70,7 @@ void silk_find_pred_coefs_FIX(
         local_gains[ i ] = silk_DIV32( ( (opus_int32)1 << 16 ), invGains_Q16[ i ] );
     }
 
-    MALLOC( LPC_in_pre,
+    ALLOC( LPC_in_pre,
            psEnc->sCmn.nb_subfr * psEnc->sCmn.predictLPCOrder
                + psEnc->sCmn.frame_length, opus_int16 );
     if( psEnc->sCmn.indices.signalType == TYPE_VOICED ) {
@@ -82,8 +82,8 @@ void silk_find_pred_coefs_FIX(
         /**********/
         celt_assert( psEnc->sCmn.ltp_mem_length - psEnc->sCmn.predictLPCOrder >= psEncCtrl->pitchL[ 0 ] + LTP_ORDER / 2 );
 
-        MALLOC( xXLTP_Q17, psEnc->sCmn.nb_subfr * LTP_ORDER, opus_int32 );
-        MALLOC( XXLTP_Q17, psEnc->sCmn.nb_subfr * LTP_ORDER * LTP_ORDER, opus_int32 );
+        ALLOC( xXLTP_Q17, psEnc->sCmn.nb_subfr * LTP_ORDER, opus_int32 );
+        ALLOC( XXLTP_Q17, psEnc->sCmn.nb_subfr * LTP_ORDER * LTP_ORDER, opus_int32 );
 
         /* LTP analysis */
         silk_find_LTP_FIX( XXLTP_Q17, xXLTP_Q17, res_pitch,
@@ -100,8 +100,6 @@ void silk_find_pred_coefs_FIX(
         silk_LTP_analysis_filter_FIX( LPC_in_pre, x - psEnc->sCmn.predictLPCOrder, psEncCtrl->LTPCoef_Q14,
             psEncCtrl->pitchL, invGains_Q16, psEnc->sCmn.subfr_length, psEnc->sCmn.nb_subfr, psEnc->sCmn.predictLPCOrder );
 
-        MFREE(xXLTP_Q17);
-        MFREE(XXLTP_Q17);
     } else {
         /************/
         /* UNVOICED */
@@ -144,5 +142,4 @@ void silk_find_pred_coefs_FIX(
     /* Copy to prediction struct for use in next frame for interpolation */
     silk_memcpy( psEnc->sCmn.prev_NLSFq_Q15, NLSF_Q15, sizeof( psEnc->sCmn.prev_NLSFq_Q15 ) );
     RESTORE_STACK;
-    MFREE(LPC_in_pre);
 }

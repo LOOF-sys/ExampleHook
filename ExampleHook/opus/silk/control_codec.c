@@ -25,7 +25,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 #ifdef FIXED_POINT
@@ -187,9 +188,10 @@ static opus_int silk_setup_resamplers(
 #ifndef FIXED_POINT
             silk_short2float_array( psEnc->x_buf, x_bufFIX, new_buf_samples);
 #endif
-            MFREE(x_bufFIX);
-            MFREE(temp_resampler_state);
+            MFREE(x_bufFIX),
             MFREE(x_buf_API_fs_Hz);
+            MFREE(temp_resampler_state);
+            MFREE(x_bufFIX);
         }
     }
 

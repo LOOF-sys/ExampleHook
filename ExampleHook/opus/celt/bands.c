@@ -27,7 +27,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -371,14 +372,14 @@ void anti_collapse(const CELTMode *m, celt_norm *X_, unsigned char *collapse_mas
 static void compute_channel_weights(celt_ener Ex, celt_ener Ey, opus_val16 w[2])
 {
    celt_ener minE;
-#ifdef FIXED_POINT
+#if FIXED_POINT
    int shift;
 #endif
    minE = MIN32(Ex, Ey);
    /* Adjustment to make the weights a bit more conservative. */
    Ex = ADD32(Ex, minE/3);
    Ey = ADD32(Ey, minE/3);
-#ifdef FIXED_POINT
+#if FIXED_POINT
    shift = celt_ilog2(EPSILON+MAX32(Ex, Ey))-14;
 #endif
    w[0] = VSHR32(Ex, shift);
@@ -1669,13 +1670,13 @@ void quant_all_bands(int encode, const CELTMode *m, int start, int end,
    }
    *seed = ctx.seed;
 
-   MFREE(_norm);
    MFREE(_lowband_scratch);
    MFREE(X_save);
    MFREE(Y_save);
    MFREE(X_save2);
    MFREE(Y_save2);
    MFREE(norm_save2);
+   MFREE(_norm);
    RESTORE_STACK;
 }
 

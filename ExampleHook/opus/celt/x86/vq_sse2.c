@@ -26,7 +26,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -210,10 +211,11 @@ opus_val16 op_pvq_search_sse2(celt_norm *_X, int *iy, int K, int N, int arch)
       y4 = _mm_xor_si128(_mm_add_epi32(y4, s4), s4);
       _mm_storeu_si128((__m128i*)&iy[j], y4);
    }
-   RESTORE_STACK;
+
    MFREE(y);
    MFREE(X);
    MFREE(signy);
+   RESTORE_STACK;
    return yy;
 }
 

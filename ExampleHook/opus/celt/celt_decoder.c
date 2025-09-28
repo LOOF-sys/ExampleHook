@@ -27,7 +27,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -50,6 +51,7 @@
 #include <stdarg.h>
 #include "celt_lpc.h"
 #include "vq.h"
+#include <stdio.h>
 
 /* The maximum pitch lag to allow in the pitch-based PLC. It's possible to save
    CPU time in the PLC pitch search by making this smaller than MAX_PERIOD. The
@@ -354,8 +356,8 @@ void deemphasis(celt_sig *in[], opus_val16 *pcm, int N, int C, int downsample, c
          }
       }
    } while (++c<C);
-   RESTORE_STACK;
    MFREE(scratch);
+   RESTORE_STACK;
 }
 
 #ifndef RESYNTH
@@ -436,8 +438,8 @@ void celt_synthesis(const CELTMode *mode, celt_norm *X, celt_sig * out_syn[],
       for (i=0;i<N;i++)
          out_syn[c][i] = SATURATE(out_syn[c][i], SIG_SAT);
    } while (++c<CC);
-   RESTORE_STACK;
    MFREE(freq);
+   RESTORE_STACK;
 }
 
 static void tf_decode(int start, int end, int isTransient, int *tf_res, int LM, ec_dec *dec)
@@ -491,8 +493,8 @@ static int celt_plc_pitch_search(celt_sig *decode_mem[2], int C, int arch)
          DECODE_BUFFER_SIZE-PLC_PITCH_LAG_MAX,
          PLC_PITCH_LAG_MAX-PLC_PITCH_LAG_MIN, &pitch_index, arch);
    pitch_index = PLC_PITCH_LAG_MAX-pitch_index;
-   RESTORE_STACK;
    MFREE(lp_pitch_buf);
+   RESTORE_STACK;
    return pitch_index;
 }
 
@@ -818,8 +820,7 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM)
    RESTORE_STACK;
 }
 
-int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *data,
-      int len, opus_val16 * OPUS_RESTRICT pcm, int frame_size, ec_dec *dec, int accum)
+int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *data, int len, opus_val16 * OPUS_RESTRICT pcm, int frame_size, ec_dec *dec, int accum)
 {
    int c, i, N;
    int spread_decision;
@@ -841,6 +842,8 @@ int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *dat
    celt_sig *out_syn[2];
    opus_val16 *lpc;
    opus_val16 *oldBandE, *oldLogE, *oldLogE2, *backgroundLogE;
+
+   //printf("decoding with ec %p, %p, %p, %lu\n", st, data, pcm, frame_size);
 
    int shortBlocks;
    int isTransient;
@@ -1177,11 +1180,6 @@ int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *dat
 
    deemphasis(out_syn, pcm, N, CC, st->downsample, mode->preemph, st->preemph_memD, accum);
    st->loss_count = 0;
-   RESTORE_STACK;
-   if (ec_tell(dec) > 8*len)
-      return OPUS_INTERNAL_ERROR;
-   if(ec_get_error(dec))
-      st->error = 1;
    MFREE(tf_res);
    MFREE(cap);
    MFREE(offsets);
@@ -1189,7 +1187,12 @@ int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *dat
    MFREE(pulses);
    MFREE(fine_priority);
    MFREE(collapse_masks);
-   MFREE(X);   /**< Interleaved normalised MDCTs */
+   MFREE(X);
+   RESTORE_STACK;
+   if (ec_tell(dec) > 8*len)
+      return OPUS_INTERNAL_ERROR;
+   if(ec_get_error(dec))
+      st->error = 1;
    return frame_size/st->downsample;
 }
 

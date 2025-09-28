@@ -88,11 +88,8 @@
     <ClCompile Include="opus\silk\enc_API.c" />
     <ClCompile Include="opus\silk\fixed\apply_sine_window_FIX.c" />
     <ClCompile Include="opus\silk\fixed\autocorr_FIX.c" />
-    <ClCompile Include="opus\silk\fixed\burg_modified_FIX.c" />
     <ClCompile Include="opus\silk\fixed\corrMatrix_FIX.c" />
-    <ClCompile Include="opus\silk\fixed\find_LPC_FIX.c" />
     <ClCompile Include="opus\silk\fixed\find_LTP_FIX.c" />
-    <ClCompile Include="opus\silk\fixed\find_pred_coefs_FIX.c" />
     <ClCompile Include="opus\silk\fixed\k2a_FIX.c" />
     <ClCompile Include="opus\silk\fixed\k2a_Q16_FIX.c" />
     <ClCompile Include="opus\silk\fixed\LTP_analysis_filter_FIX.c" />
@@ -106,7 +103,6 @@
     <ClCompile Include="opus\silk\fixed\schur_FIX.c" />
     <ClCompile Include="opus\silk\fixed\vector_ops_FIX.c" />
     <ClCompile Include="opus\silk\fixed\warped_autocorrelation_FIX.c" />
-    <ClCompile Include="opus\silk\fixed\x86\burg_modified_FIX_sse4_1.c" />
     <ClCompile Include="opus\silk\fixed\x86\vector_ops_FIX_sse4_1.c" />
     <ClCompile Include="opus\silk\float\apply_sine_window_FLP.c" />
     <ClCompile Include="opus\silk\float\autocorrelation_FLP.c" />
@@ -192,6 +188,7 @@
     <ClCompile Include="opus\silk\VQ_WMat_EC.c" />
     <ClCompile Include="opus\silk\x86\NSQ_del_dec_sse4_1.c" />
     <ClCompile Include="opus\silk\x86\VQ_WMat_EC_sse4_1.c" />
+    <ClCompile Include="opus\silk\x86\x86_silk_map.c" />
     <ClCompile Include="opus\src\analysis.c" />
     <ClCompile Include="opus\src\mapping_matrix.c" />
     <ClCompile Include="opus\src\mlp.c" />
@@ -316,6 +313,7 @@
     <ClInclude Include="opus\src\mlp.h" />
     <ClInclude Include="opus\src\opus_private.h" />
     <ClInclude Include="opus\src\tansig_table.h" />
+    <ClInclude Include="opus\version.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -434,6 +432,7 @@
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <ControlFlowGuard>false</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

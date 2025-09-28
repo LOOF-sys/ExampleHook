@@ -42,7 +42,7 @@
 #define __MDCT_MIPSR1_H__
 
 #ifndef SKIP_CONFIG_H
-#ifndef HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 #endif
@@ -180,8 +180,8 @@ void clt_mdct_forward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scalar
       }
    }
    RESTORE_STACK;
-   MFREE(f);
-   MFREE(f2);
+   MFREE(f, N2, kiss_fft_scalar);
+   MFREE(f2, N4, kiss_fft_cpx);
 }
 
 #define OVERRIDE_clt_mdct_backward

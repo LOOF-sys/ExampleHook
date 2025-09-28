@@ -10,9 +10,6 @@
     <Filter Include="libraries">
       <UniqueIdentifier>{31e74b2c-6a09-4769-af5d-4292ecb874d1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="libraries\opus">
-      <UniqueIdentifier>{b47b1fae-86f8-4658-93d2-8a6adb146c5a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="libraries\minhook">
       <UniqueIdentifier>{b5fec871-c8e2-4909-a219-8b1a9fe55f1a}</UniqueIdentifier>
     </Filter>
@@ -21,6 +18,9 @@
     </Filter>
     <Filter Include="source\exceptions">
       <UniqueIdentifier>{a26d671e-241f-4868-8ebe-7b90856efea9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libraries\opus">
+      <UniqueIdentifier>{148fcfa3-e19b-4fbb-a70e-7874ee83a960}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -84,6 +84,9 @@
     <ClCompile Include="window.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="exceptions.cpp">
+      <Filter>source\exceptions</Filter>
+    </ClCompile>
     <ClCompile Include="opus\silk\A2NLSF.c">
       <Filter>libraries\opus</Filter>
     </ClCompile>
@@ -109,12 +112,6 @@
       <Filter>libraries\opus</Filter>
     </ClCompile>
     <ClCompile Include="opus\silk\biquad_alt.c">
-      <Filter>libraries\opus</Filter>
-    </ClCompile>
-    <ClCompile Include="opus\silk\fixed\burg_modified_FIX.c">
-      <Filter>libraries\opus</Filter>
-    </ClCompile>
-    <ClCompile Include="opus\silk\fixed\x86\burg_modified_FIX_sse4_1.c">
       <Filter>libraries\opus</Filter>
     </ClCompile>
     <ClCompile Include="opus\silk\float\burg_modified_FLP.c">
@@ -222,9 +219,6 @@
     <ClCompile Include="opus\celt\entenc.c">
       <Filter>libraries\opus</Filter>
     </ClCompile>
-    <ClCompile Include="opus\silk\fixed\find_LPC_FIX.c">
-      <Filter>libraries\opus</Filter>
-    </ClCompile>
     <ClCompile Include="opus\silk\float\find_LPC_FLP.c">
       <Filter>libraries\opus</Filter>
     </ClCompile>
@@ -235,9 +229,6 @@
       <Filter>libraries\opus</Filter>
     </ClCompile>
     <ClCompile Include="opus\silk\float\find_pitch_lags_FLP.c">
-      <Filter>libraries\opus</Filter>
-    </ClCompile>
-    <ClCompile Include="opus\silk\fixed\find_pred_coefs_FIX.c">
       <Filter>libraries\opus</Filter>
     </ClCompile>
     <ClCompile Include="opus\silk\float\find_pred_coefs_FLP.c">
@@ -585,11 +576,11 @@
     <ClCompile Include="opus\celt\x86\x86_celt_map.c">
       <Filter>libraries\opus</Filter>
     </ClCompile>
-    <ClCompile Include="opus\celt\x86\x86cpu.c">
+    <ClCompile Include="opus\silk\x86\x86_silk_map.c">
       <Filter>libraries\opus</Filter>
     </ClCompile>
-    <ClCompile Include="exceptions.cpp">
-      <Filter>source\exceptions</Filter>
+    <ClCompile Include="opus\celt\x86\x86cpu.c">
+      <Filter>libraries\opus</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -598,9 +589,6 @@
     </ClInclude>
     <ClInclude Include="offsets.hpp">
       <Filter>source\offsets</Filter>
-    </ClInclude>
-    <ClInclude Include="opus\config.h">
-      <Filter>libraries\opus</Filter>
     </ClInclude>
     <ClInclude Include="minhook\buffer.h">
       <Filter>libraries\minhook</Filter>
@@ -656,6 +644,9 @@
     <ClInclude Include="imgui\imgui.h">
       <Filter>libraries\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="exceptions.hpp">
+      <Filter>source\exceptions</Filter>
+    </ClInclude>
     <ClInclude Include="opus\celt\_kiss_fft_guts.h">
       <Filter>libraries\opus</Filter>
     </ClInclude>
@@ -681,6 +672,9 @@
       <Filter>libraries\opus</Filter>
     </ClInclude>
     <ClInclude Include="opus\celt\mips\celt_mipsr1.h">
+      <Filter>libraries\opus</Filter>
+    </ClInclude>
+    <ClInclude Include="opus\config.h">
       <Filter>libraries\opus</Filter>
     </ClInclude>
     <ClInclude Include="opus\silk\control.h">
@@ -893,6 +887,9 @@
     <ClInclude Include="opus\silk\typedef.h">
       <Filter>libraries\opus</Filter>
     </ClInclude>
+    <ClInclude Include="opus\version.h">
+      <Filter>libraries\opus</Filter>
+    </ClInclude>
     <ClInclude Include="opus\celt\vq.h">
       <Filter>libraries\opus</Filter>
     </ClInclude>
@@ -907,9 +904,6 @@
     </ClInclude>
     <ClInclude Include="opus\celt\x86\x86cpu.h">
       <Filter>libraries\opus</Filter>
-    </ClInclude>
-    <ClInclude Include="exceptions.hpp">
-      <Filter>source\exceptions</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

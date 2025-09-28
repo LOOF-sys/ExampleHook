@@ -25,7 +25,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -188,8 +189,8 @@ static OPUS_INLINE void silk_PLC_energy(opus_int32 *energy1, opus_int *shift1, o
     /* Find the subframe with lowest energy of the last two and use that as random noise generator */
     silk_sum_sqr_shift( energy1, shift1, exc_buf,                  subfr_length );
     silk_sum_sqr_shift( energy2, shift2, &exc_buf[ subfr_length ], subfr_length );
-    RESTORE_STACK;
     MFREE(exc_buf);
+    RESTORE_STACK;
 }
 
 static OPUS_INLINE void silk_PLC_conceal(
@@ -386,9 +387,9 @@ static OPUS_INLINE void silk_PLC_conceal(
     for( i = 0; i < MAX_NB_SUBFR; i++ ) {
         psDecCtrl->pitchL[ i ] = lag;
     }
-    RESTORE_STACK;
     MFREE(sLTP_Q14);
     MFREE(sLTP);
+    RESTORE_STACK;
 }
 
 /* Glues concealed frames with new good received frames */

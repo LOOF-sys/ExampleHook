@@ -25,7 +25,9 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef HAVE_CONFIG_H
+
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
 
@@ -346,6 +348,7 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
    if (audiosize > frame_size)
    {
       /*fprintf(stderr, "PCM buffer too small: %d vs %d (mode = %d)\n", audiosize, frame_size, mode);*/
+       MFREE(pcm_transition_celt);
       RESTORE_STACK;
       return OPUS_BAD_ARG;
    } else {
@@ -408,9 +411,9 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
               for (i=0;i<frame_size*st->channels;i++)
                  pcm_ptr[i] = 0;
            } else {
+               MFREE(pcm_transition_celt);
+               MFREE(pcm_silk);
              RESTORE_STACK;
-             MFREE(pcm_silk);
-             MFREE(pcm_transition_celt);
              return OPUS_INTERNAL_ERROR;
            }
         }
@@ -620,11 +623,11 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
          OPUS_PRINT_INT(audiosize);
    }
 
-   RESTORE_STACK;
-   MFREE(pcm_silk);
    MFREE(pcm_transition_celt);
+   MFREE(pcm_silk);
    MFREE(pcm_transition_silk);
    MFREE(redundant_audio);
+   RESTORE_STACK;
    return celt_ret < 0 ? celt_ret : audiosize;
 
 }
@@ -739,6 +742,8 @@ int opus_decode_native(OpusDecoder *st, const unsigned char *data,
       opus_pcm_soft_clip(pcm, nb_samples, st->channels, st->softclip_mem);
    else
       st->softclip_mem[0]=st->softclip_mem[1]=0;
+   //st->softclip_mem[0] = 0;
+   //st->softclip_mem[1] = 0;
 #endif
    return nb_samples;
 }
@@ -791,6 +796,7 @@ int opus_decode_float(OpusDecoder *st, const unsigned char *data,
 
 
 #else
+
 int opus_decode(OpusDecoder *st, const unsigned char *data,
       opus_int32 len, opus_int16 *pcm, int frame_size, int decode_fec)
 {
@@ -803,7 +809,7 @@ int opus_decode(OpusDecoder *st, const unsigned char *data,
    {
       RESTORE_STACK;
       return OPUS_BAD_ARG;
-   }
+   }    
 
    if (data != NULL && len > 0 && !decode_fec)
    {

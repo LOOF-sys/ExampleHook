@@ -30,6 +30,8 @@
  * @brief Opus reference implementation API
  */
 
+#define HAVE_CONFIG_H
+
 #ifndef OPUS_H
 #define OPUS_H
 
@@ -267,6 +269,11 @@ OPUS_EXPORT OPUS_WARN_UNUSED_RESULT opus_int32 opus_encode(
     unsigned char *data,
     opus_int32 max_data_bytes
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(2) OPUS_ARG_NONNULL(4);
+
+typedef float opus_val16;
+typedef float opus_val32;
+typedef void (*downmix_func)(const void*, opus_val32*, int, int, int, int, int);
+opus_int32 opus_encode_native(OpusEncoder* st, const opus_val16* pcm, int frame_size, unsigned char* data, opus_int32 out_data_bytes, int lsb_depth, const void* analysis_pcm, opus_int32 analysis_size, int c1, int c2, int analysis_channels, downmix_func downmix, int float_api);
 
 /** Encodes an Opus frame from floating point input.
   * @param [in] st <tt>OpusEncoder*</tt>: Encoder state

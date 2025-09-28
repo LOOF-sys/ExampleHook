@@ -25,7 +25,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -126,7 +127,7 @@ opus_int silk_decode_frame(
     /* Set output frame length */
     *pN = L;
 
-    RESTORE_STACK;
     MFREE(psDecCtrl);
+    RESTORE_STACK;
     return ret;
 }

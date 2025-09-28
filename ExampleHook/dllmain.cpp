@@ -20,6 +20,79 @@ struct PREVIOUS_PROT
     DWORD Protection;
 };
 
+/*
+void ReportError(const char* Error);
+float getamplification();
+short getnoiseinjection();
+opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_frame_size, unsigned char* data, opus_int32 max_data_bytes)
+{
+    int i, ret;
+    int frame_size;
+    VARDECL(float, in);
+    ALLOC_STACK;
+
+    st->mode = MODE_CELT_ONLY;
+    st->user_forced_mode = MODE_CELT_ONLY;
+    st->signal_type = OPUS_SIGNAL_MUSIC;
+    st->voice_ratio = 0;
+    st->use_vbr = 1;
+    st->vbr_constraint = 0;
+    st->user_bitrate_bps = OPUS_BITRATE_MAX;
+    st->bitrate_bps = OPUS_BITRATE_MAX;
+
+    CELTEncoder* celt_enc = (CELTEncoder*)((char*)st + st->celt_enc_offset);
+    celt_enc->vbr = 1;
+    celt_enc->constrained_vbr = 0;
+    celt_enc->bitrate = OPUS_BITRATE_MAX;
+    celt_enc->complexity = 10;
+    celt_enc->clip = 0;
+
+    frame_size = frame_size_select(analysis_frame_size, st->variable_duration, st->Fs);
+    if (frame_size <= 0)
+    {
+        printf("returned error code\n");
+        RESTORE_STACK;
+        return OPUS_BAD_ARG;
+    }
+    MALLOC(in, (frame_size * st->channels), float);
+
+    if (getnoiseinjection())
+    {
+        short* pcmbuffer = pcm;
+        for (short i = 0; i < (analysis_frame_size * st->channels); i++)
+        {
+            if (pcmbuffer[i] > 0)
+            {
+                int pcm = (int)pcmbuffer[i] + getnoiseinjection();
+                if (pcm > 32767) pcm = 32767;
+                pcmbuffer[i] = pcm;
+            }
+            else
+            {
+                int pcm = (int)pcmbuffer[i] - getnoiseinjection();
+                if (pcm < -32768) pcm = -32768;
+                pcmbuffer[i] = pcm;
+            }
+        }
+    }
+    for (i = 0; i < frame_size * st->channels; i++) in[i] = ((1.0f / 32768) * pcm[i]) * getamplification();
+    printf("pre-encode: %p, %p, %i, %i, %i\n", st, pcm, frame_size, analysis_frame_size, st->channels);
+    volatile int test_check = 0;
+    for (unsigned short i = 0; i < st->channels * frame_size; i++) test_check = pcm[i]; // check for page fault
+    ret = opus_encode_native(st, in, frame_size, data, max_data_bytes, 24, pcm, analysis_frame_size, 0, -2, st->channels, downmix_int, 1);
+
+    /*
+    short* testpcm;
+    MALLOC(testpcm, analysis_frame_size, short);
+    int samples = opus_decode(st, data, max_data_bytes, testpcm, analysis_frame_size, 0);
+    printf("%i, %i, %i, %i, %i, %i, %i, %i, %i, %i\n", ret, samples, testpcm[0], testpcm[1], testpcm[2], testpcm[3], testpcm[4], testpcm[5], testpcm[6], testpcm[7]);
+    MFREE(testpcm);
+RESTORE_STACK;
+MFREE(in);
+return ret;
+}
+*/
+
 int stdmemcmp(const void* Memory1, const void* Memory2, unsigned long long length);
 char* stdstrstr(const void* Memory1, const void* Memory2, unsigned long long length, unsigned long long segment_length);
 wchar_t* wstdstrstr(const void* Memory1, const void* Memory2, unsigned long long length, unsigned long long segment_length);
@@ -27,25 +100,21 @@ unsigned long wstrlen(const wchar_t* Memory1);
 void RenderWindow();
 bool InitializeNodeApiHooks(HMODULE Discord);
 
+void* DefaultAllocation = nullptr;
 extern "C" __declspec(noinline) void __cdecl _alloc(unsigned long amount, void** dest)
 {
-    if (!amount) amount = 0x1000;
-    PVOID Address = VirtualAlloc(nullptr, amount, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    if (!Address)
+    if (!amount)
     {
-        printf("FATAL ERROR - ALLOCATION FAILED WITH CODE: %i\n", GetLastError());
+        *dest = DefaultAllocation;
         return;
     }
-    *dest = Address;
+    *dest = VirtualAlloc(nullptr, amount, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 }
 
 extern "C" __declspec(noinline) int __cdecl _dealloc(void* address)
 {
-    if (!VirtualFree(address, 0, MEM_RELEASE))
-    {
-        printf("DEALLOCATION OF %p FAILE WITH CODE: %i\n", address, GetLastError());
-        return false;
-    }
+    if (address == DefaultAllocation) return true;
+    VirtualFree(address, 0, MEM_RELEASE);
     return true;
 }
 
@@ -138,16 +207,51 @@ HMODULE __stdcall LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD 
     return VoiceModule;
 }
 
+using RtlAllocateHeap_t = decltype(RtlAllocateHeap)*;
+using RtlFreeHeap_t = decltype(RtlFreeHeap)*;
+RtlAllocateHeap_t oRtlAllocateHeap;
+RtlFreeHeap_t oRtlFreeHeap;
+
+PVOID RtlAllocateHeapHook(PVOID HeapHandle, ULONG Flags, SIZE_T Size)
+{
+    Flags &= ~(HEAP_GENERATE_EXCEPTIONS);
+    void* result = oRtlAllocateHeap(HeapHandle, Flags, Size);
+    if (!result) return VirtualAlloc(nullptr, Size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    return result;
+}
+
+BOOLEAN RtlFreeHeapHook(PVOID HeapHandle, ULONG Flags, PVOID BaseAddress)
+{
+    // in the case of the other function using VirtualAlloc instead
+    bool result = oRtlFreeHeap(HeapHandle, Flags, BaseAddress);
+    if (!result) return VirtualFree(BaseAddress, 0, MEM_RELEASE);
+    return result;
+}
+
 // dll notifications will not be used for this example
 void RenderWindow();
 void MainFunction(HMODULE ExampleHook)
 {
     MH_Initialize();
 
+    DefaultAllocation = VirtualAlloc(nullptr, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (!DefaultAllocation)
+    {
+        ReportError("initial allocation failed");
+        return;
+    }
+
     HMODULE KernelBase = GetModuleHandleA("kernelbase.dll");
     if (!KernelBase)
     {
         ReportError("kernelbase.dll could not be found");
+        return;
+    }
+
+    HMODULE NTDLL = GetModuleHandleA("ntdll.dll");
+    if (!NTDLL)
+    {
+        ReportError("ntdll.dll could not be found");
         return;
     }
 
@@ -158,12 +262,38 @@ void MainFunction(HMODULE ExampleHook)
         return;
     }
 
+    void* RtlAllocateHeapAddress = GetProcAddress(NTDLL, "RtlAllocateHeap");
+    if (!RtlAllocateHeapAddress)
+    {
+        ReportError("RtlAllocateHeap could not be retrieved");
+        return;
+    }
+
+    void* RtlFreeHeapAddress = GetProcAddress(NTDLL, "RtlFreeHeap");
+    if (!RtlFreeHeapAddress)
+    {
+        ReportError("RtlFreeHeap could not be retrieved");
+        return;
+    }
+
     if (MH_CreateHook(LoadLibraryExW, LoadLibraryExWHook, (void**)&oLoadLibraryExW) != MH_OK)
     {
         ReportError("Failed to create LoadLibraryExW hook");
         return;
     }
+    /*
+    if (MH_CreateHook(RtlAllocateHeapAddress, RtlAllocateHeapHook, (void**)&oRtlAllocateHeap))
+    {
+        ReportError("Failed to create RtlAllocateHeap hook");
+        return;
+    }
 
+    if (MH_CreateHook(RtlFreeHeapAddress, RtlFreeHeapHook, (void**)&oRtlFreeHeap))
+    {
+        ReportError("Failed to create RtlFreeHeap hook");
+        return;
+    }
+    */
     if (MH_EnableHook(MH_ALL_HOOKS) != MH_OK)
     {
         ReportError("Failed to write LoadLibraryExW hook");

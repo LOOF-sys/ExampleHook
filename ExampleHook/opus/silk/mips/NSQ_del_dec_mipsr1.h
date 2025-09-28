@@ -28,7 +28,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef __NSQ_DEL_DEC_MIPSR1_H__
 #define __NSQ_DEL_DEC_MIPSR1_H__
 
-#ifndef HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 

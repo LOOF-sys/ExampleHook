@@ -25,7 +25,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -202,8 +203,8 @@ void silk_encode_pulses(
     /* Encode signs */
     /****************/
     silk_encode_signs( psRangeEnc, pulses, frame_length, signalType, quantOffsetType, sum_pulses );
-    RESTORE_STACK;
     MFREE(abs_pulses);
     MFREE(sum_pulses);
     MFREE(nRshifts);
+    RESTORE_STACK;
 }

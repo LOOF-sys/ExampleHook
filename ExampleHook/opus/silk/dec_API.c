@@ -25,7 +25,9 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-#ifndef HAVE_CONFIG_H
+
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 #include "API.h"
@@ -260,9 +262,7 @@ opus_int silk_Decode(                                   /* O    Returns error co
        usage. We need to use a < and not a <= because of the two extra samples. */
     delay_stack_alloc = decControl->internalSampleRate*decControl->nChannelsInternal
           < decControl->API_sampleRate*decControl->nChannelsAPI;
-    MALLOC( samplesOut1_tmp_storage1, delay_stack_alloc ? ALLOC_NONE
-           : decControl->nChannelsInternal*(channel_state[ 0 ].frame_length + 2 ),
-           opus_int16 );
+    MALLOC( samplesOut1_tmp_storage1, delay_stack_alloc ? ALLOC_NONE : decControl->nChannelsInternal*(channel_state[ 0 ].frame_length + 2 ),opus_int16 );
     if ( delay_stack_alloc )
     {
        samplesOut1_tmp[ 0 ] = samplesOut;
@@ -317,18 +317,14 @@ opus_int silk_Decode(                                   /* O    Returns error co
     *nSamplesOut = silk_DIV32( nSamplesOutDec * decControl->API_sampleRate, silk_SMULBB( channel_state[ 0 ].fs_kHz, 1000 ) );
 
     /* Set up pointers to temp buffers */
-    MALLOC( samplesOut2_tmp,
-           decControl->nChannelsAPI == 2 ? *nSamplesOut : ALLOC_NONE, opus_int16 );
+    MALLOC( samplesOut2_tmp, decControl->nChannelsAPI == 2 ? *nSamplesOut : ALLOC_NONE, opus_int16 );
     if( decControl->nChannelsAPI == 2 ) {
         resample_out_ptr = samplesOut2_tmp;
     } else {
         resample_out_ptr = samplesOut;
     }
 
-    MALLOC( samplesOut1_tmp_storage2, delay_stack_alloc
-           ? decControl->nChannelsInternal*(channel_state[ 0 ].frame_length + 2 )
-           : ALLOC_NONE,
-           opus_int16 );
+    MALLOC( samplesOut1_tmp_storage2, delay_stack_alloc ? decControl->nChannelsInternal*(channel_state[ 0 ].frame_length + 2 ) : ALLOC_NONE, opus_int16 );
     if ( delay_stack_alloc ) {
        OPUS_COPY(samplesOut1_tmp_storage2, samplesOut, decControl->nChannelsInternal*(channel_state[ 0 ].frame_length + 2));
        samplesOut1_tmp[ 0 ] = samplesOut1_tmp_storage2;
@@ -380,10 +376,10 @@ opus_int silk_Decode(                                   /* O    Returns error co
     } else {
        psDec->prev_decode_only_middle = decode_only_middle;
     }
-    RESTORE_STACK;
-    MFREE(samplesOut1_tmp_storage1);
-    MFREE(samplesOut2_tmp);
     MFREE(samplesOut1_tmp_storage2);
+    MFREE(samplesOut2_tmp);
+    MFREE(samplesOut1_tmp_storage1);
+    RESTORE_STACK;
     return ret;
 }
 

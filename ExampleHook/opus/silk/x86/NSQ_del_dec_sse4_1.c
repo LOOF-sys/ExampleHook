@@ -25,7 +25,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -185,8 +186,7 @@ void silk_NSQ_del_dec_sse4_1(
         LSF_interpolation_flag = 1;
     }
 
-    MALLOC( sLTP_Q15,
-           psEncC->ltp_mem_length + psEncC->frame_length, opus_int32 );
+    MALLOC( sLTP_Q15, psEncC->ltp_mem_length + psEncC->frame_length, opus_int32 );
     MALLOC( sLTP, psEncC->ltp_mem_length + psEncC->frame_length, opus_int16 );
     MALLOC( x_sc_Q10, psEncC->subfr_length, opus_int32 );
     MALLOC( delayedGain_Q10, DECISION_DELAY, opus_int32 );
@@ -303,12 +303,12 @@ void silk_NSQ_del_dec_sse4_1(
     /* Save quantized speech signal */
     silk_memmove( NSQ->xq,           &NSQ->xq[           psEncC->frame_length ], psEncC->ltp_mem_length * sizeof( opus_int16 ) );
     silk_memmove( NSQ->sLTP_shp_Q14, &NSQ->sLTP_shp_Q14[ psEncC->frame_length ], psEncC->ltp_mem_length * sizeof( opus_int32 ) );
-    RESTORE_STACK;
-    MFREE(psDelDec);
     MFREE(sLTP_Q15);
     MFREE(sLTP);
     MFREE(x_sc_Q10);
     MFREE(delayedGain_Q10);
+    MFREE(psDelDec);
+    RESTORE_STACK;
 }
 
 /******************************************/
@@ -359,7 +359,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
     SAVE_STACK;
 
     celt_assert( nStatesDelayedDecision > 0 );
-    ALLOC( psSampleState, nStatesDelayedDecision, NSQ_sample_pair );
+    MALLOC( psSampleState, nStatesDelayedDecision, NSQ_sample_pair );
 
     shp_lag_ptr  = &NSQ->sLTP_shp_Q14[ NSQ->sLTP_shp_buf_idx - lag + HARM_SHAPE_FIR_TAPS / 2 ];
     pred_lag_ptr = &sLTP_Q15[ NSQ->sLTP_buf_idx - lag + LTP_ORDER / 2 ];
@@ -726,6 +726,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
         psDD = &psDelDec[ k ];
         silk_memcpy( psDD->sLPC_Q14, &psDD->sLPC_Q14[ length ], NSQ_LPC_BUF_LENGTH * sizeof( opus_int32 ) );
     }
+    MFREE(psSampleState);
     RESTORE_STACK;
 }
 

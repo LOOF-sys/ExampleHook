@@ -28,7 +28,8 @@
 #ifndef CELT_LPC_SSE_H
 #define CELT_LPC_SSE_H
 
-#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 

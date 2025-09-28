@@ -30,7 +30,7 @@
 #ifndef __CELT_MIPSR1_H__
 #define __CELT_MIPSR1_H__
 
-#ifndef HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
@@ -53,7 +53,6 @@
 #include "celt_lpc.h"
 #include "vq.h"
 
-#define OVERRIDE_COMB_FILTER_CONST
 #define OVERRIDE_comb_filter
 void comb_filter(opus_val32 *y, opus_val32 *x, int T0, int T1, int N,
       opus_val16 g0, opus_val16 g1, int tapset0, int tapset1,
