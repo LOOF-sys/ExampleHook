@@ -776,9 +776,6 @@
     <ClInclude Include="opus\celt\modes.h">
       <Filter>libraries\opus</Filter>
     </ClInclude>
-    <ClInclude Include="opus\silk\fixed\mips\noise_shape_analysis_FIX_mipsr1.h">
-      <Filter>libraries\opus</Filter>
-    </ClInclude>
     <ClInclude Include="opus\silk\NSQ.h">
       <Filter>libraries\opus</Filter>
     </ClInclude>

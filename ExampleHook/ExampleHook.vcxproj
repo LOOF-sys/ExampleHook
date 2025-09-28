@@ -281,7 +281,6 @@
     <ClInclude Include="opus\silk\define.h" />
     <ClInclude Include="opus\silk\errors.h" />
     <ClInclude Include="opus\silk\fixed\main_FIX.h" />
-    <ClInclude Include="opus\silk\fixed\mips\noise_shape_analysis_FIX_mipsr1.h" />
     <ClInclude Include="opus\silk\fixed\mips\warped_autocorrelation_FIX_mipsr1.h" />
     <ClInclude Include="opus\silk\fixed\structs_FIX.h" />
     <ClInclude Include="opus\silk\float\main_FLP.h" />

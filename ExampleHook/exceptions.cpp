@@ -8,6 +8,8 @@
 void* BaseAddress = nullptr;
 uint64_t LoadedModuleSize = 0;
 
+#define MS_VC_EXCEPTION 0x406D1388
+
 std::string GetExceptionCodeAsString(DWORD Code)
 {
 	switch (Code)
@@ -52,6 +54,8 @@ std::string GetExceptionCodeAsString(DWORD Code)
 		return "EXCEPTION_SINGLE_STEP";
 	case EXCEPTION_STACK_OVERFLOW:
 		return "EXCEPTION_STACK_OVERFLOW";
+	case MS_VC_EXCEPTION:
+		return "MS_VC_EXCEPTION";
 	case 0xC0000374:
 		return "STATUS_HEAP_CORRUPTION";
 	default:
@@ -94,41 +98,25 @@ completed:
 	return;
 }
 
+/* debugging routines & tables for identifying threads and if the exception occured during the opus_encode routine or postcall */
 uint8_t eVoiceEncoderThreads = 0;
 PDWORD VoiceEncoderThreads = {};
 bool* VoiceEncoderStates = {};
-extern "C" void InsertVoiceThread()
-{
-	VoiceEncoderThreads[eVoiceEncoderThreads++] = GetCurrentThreadId();
-}
-
+extern "C" void InsertVoiceThread() { VoiceEncoderThreads[eVoiceEncoderThreads++] = GetCurrentThreadId(); }
 extern "C" bool IsVoiceThreadInserted()
 {
 	DWORD ThreadId = GetCurrentThreadId();
 	for (uint8_t i = 0; i < eVoiceEncoderThreads; i++) if (VoiceEncoderThreads[i] == ThreadId) return true;
 	return false;
 }
-
-extern "C" bool IsPrimaryVoiceThread()
-{
-	return (GetCurrentThreadId() == VoiceEncoderThreads[0]);
-}
-
-extern "C" void ChangeEncoderState(bool PreEncoding)
-{
-	for (uint8_t i = 0; i < eVoiceEncoderThreads; i++) if (VoiceEncoderThreads[i] == GetCurrentThreadId()) VoiceEncoderStates[i] = PreEncoding;
-}
-
-// dumps a section of memory to file
-void CreateMemoryReport(void* VirtualAddress)
-{
-
-}
+extern "C" bool IsPrimaryVoiceThread() {return (GetCurrentThreadId() == VoiceEncoderThreads[0]); }
+extern "C" void ChangeEncoderState(bool PreEncoding) { for (uint8_t i = 0; i < eVoiceEncoderThreads; i++) if (VoiceEncoderThreads[i] == GetCurrentThreadId()) VoiceEncoderStates[i] = PreEncoding; }
 
 bool Crashed = false;
 extern "C" void ReportError(LPCSTR Error);
 LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 {
+	if (ExceptionPointers->ExceptionRecord->ExceptionCode == MS_VC_EXCEPTION) return 0;
 	if (Crashed) return EXCEPTION_CONTINUE_EXECUTION; // keeps process loaded
 	bool VoiceThread = false;
 	DWORD ThreadId = GetCurrentThreadId();
@@ -142,8 +130,7 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 		}
 	}
 
-	// VoiceThread not used anymore for debugging
-	if (ExceptionPointers->ExceptionRecord->ExceptionAddress >= BaseAddress && ((uint64_t)BaseAddress) + LoadedModuleSize >= (uint64_t)ExceptionPointers->ExceptionRecord->ExceptionAddress)
+	if (GetExceptionCodeAsString(ExceptionPointers->ExceptionRecord->ExceptionCode) != "UNDEFINED" || (ExceptionPointers->ExceptionRecord->ExceptionAddress >= BaseAddress && ((uint64_t)BaseAddress) + LoadedModuleSize >= (uint64_t)ExceptionPointers->ExceptionRecord->ExceptionAddress))
 	{
 		SYSTEMTIME SystemTime = {};
 		GetSystemTime(&SystemTime);
@@ -188,7 +175,6 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 			return 0;
 		}
 		Crashed = true;
-
 		std::cout << crashlog << std::endl;
 		NtSuspendProcess(NtCurrentProcess);
 		return EXCEPTION_CONTINUE_EXECUTION;
