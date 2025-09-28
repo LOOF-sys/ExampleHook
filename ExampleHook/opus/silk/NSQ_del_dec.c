@@ -368,7 +368,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec(
     SAVE_STACK;
 
     celt_assert( nStatesDelayedDecision > 0 );
-    ALLOC( psSampleState, nStatesDelayedDecision, NSQ_sample_pair );
+    MALLOC( psSampleState, nStatesDelayedDecision, NSQ_sample_pair );
 
     shp_lag_ptr  = &NSQ->sLTP_shp_Q14[ NSQ->sLTP_shp_buf_idx - lag + HARM_SHAPE_FIR_TAPS / 2 ];
     pred_lag_ptr = &sLTP_Q15[ NSQ->sLTP_buf_idx - lag + LTP_ORDER / 2 ];
@@ -651,6 +651,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec(
         silk_memcpy( psDD->sLPC_Q14, &psDD->sLPC_Q14[ length ], NSQ_LPC_BUF_LENGTH * sizeof( opus_int32 ) );
     }
     RESTORE_STACK;
+    MFREE(psSampleState);
 }
 #endif /* OVERRIDE_silk_noise_shape_quantizer_del_dec */
 

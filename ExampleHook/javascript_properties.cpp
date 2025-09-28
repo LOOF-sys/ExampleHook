@@ -57,13 +57,14 @@ uint64_t napi_get_value_boolhook(napi_env* env, napi_value* value, bool* result)
 	return napi_get_value_bool(env, value, result);
 }
 
+int32_t GetPacketBitrate();
 napi_value* bitrate_object = {};
 uint64_t napi_get_value_int32hook(napi_env* env, napi_value* value, int32_t* result)
 {
 	if (value && value == (PVOID)bitrate_object)
 	{
 		_printf("bitrate spoofed\n");
-		*result = 512000;
+		*result = GetPacketBitrate();
 		return 0;
 	}
 	//_printf("converted int32_t\n");

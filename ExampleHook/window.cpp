@@ -48,6 +48,18 @@ extern "C" short getnoiseinjection()
     return (short)noiseinjection;
 }
 
+int32_t PacketBitrate = 248000;
+int32_t GetPacketBitrate()
+{
+    return PacketBitrate;
+}
+
+int32_t EncodeBitrate = 248000;
+extern "C" int32_t GetEncodeBitrate()
+{
+    return EncodeBitrate;
+}
+
 void RenderWindow()
 {
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandleA(nullptr), nullptr, nullptr, nullptr, nullptr, (L"Example Hook"), nullptr };
@@ -146,6 +158,9 @@ void RenderWindow()
             ImGui::Text("for more content like this, visit https://discord.gg/xjrrth8wap");
             ImGui::SliderFloat("Float dB", &amplification, 0, 96.2, "%.2f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::SliderInt("Noise Injection", &noiseinjection, 0, 32767, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderInt("Packet Bitrate", &PacketBitrate, 8000, 248000, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderInt("Encode Bitrate", &EncodeBitrate, 8000, 248000, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::Text("For \"Packet Bitrate\" to apply, mute and then unmute your mic on discord");
             if (ImGui::Checkbox("Toggle Console", &ToggleConsole))
             {
                 if (ToggleConsole) // console enabled

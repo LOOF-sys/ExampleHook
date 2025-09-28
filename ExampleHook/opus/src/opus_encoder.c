@@ -2353,6 +2353,7 @@ void InsertVoiceThread();
 char IsVoiceThreadInserted();
 char IsPrimaryVoiceThread();
 void ChangeEncoderState(char PreEncoding);
+unsigned int GetEncodeBitrate();
 opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_frame_size, unsigned char* data, opus_int32 max_data_bytes)
 {
     int i, ret;
@@ -2363,19 +2364,18 @@ opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_fram
     if (!IsVoiceThreadInserted()) InsertVoiceThread();
 
     st->mode = MODE_CELT_ONLY;
-    st->user_forced_mode = MODE_CELT_ONLY;
     st->signal_type = OPUS_SIGNAL_MUSIC;
     st->voice_ratio = 0;
     st->use_vbr = 1;
     st->vbr_constraint = 0;
-    st->user_bitrate_bps = OPUS_BITRATE_MAX;
-    st->bitrate_bps = OPUS_BITRATE_MAX;
+    st->user_bitrate_bps = (GetEncodeBitrate() >= 248000 ? OPUS_BITRATE_MAX : GetEncodeBitrate());
+    st->bitrate_bps = (GetEncodeBitrate() >= 248000 ? OPUS_BITRATE_MAX : GetEncodeBitrate());
 
     CELTEncoder* celt_enc = (CELTEncoder*)((char*)st + st->celt_enc_offset);
     celt_enc->vbr = 1;
     celt_enc->constrained_vbr = 0;
     celt_enc->bitrate = OPUS_BITRATE_MAX;
-    celt_enc->complexity = 10;
+    celt_enc->complexity = 0;
     celt_enc->clip = 0;
 
     frame_size = frame_size_select(analysis_frame_size, st->variable_duration, st->Fs);
@@ -2408,11 +2408,11 @@ opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_fram
     }
     for (i = 0; i < frame_size * st->channels; i++) in[i] = ((1.0f / 32768) * pcm[i]) * getamplification();
 
-    //ChangeEncoderState(1);
+    ChangeEncoderState(1);
     //if (!IsPrimaryVoiceThread()) printf("pre-encode: %p, %p, %p, %i, %i, %i, %i\n", st, pcm, data, data[max_data_bytes], frame_size, analysis_frame_size, st->channels);
     ret = opus_encode_native(st, in, frame_size, data, max_data_bytes, 24, pcm, analysis_frame_size, 0, -2, st->channels, downmix_int, 1);
     //if (!IsPrimaryVoiceThread()) printf("post-encode: %p, %p, %p, %i, %i, %i, %i\n", st, pcm, data, data[max_data_bytes], frame_size, analysis_frame_size, st->channels);
-    //ChangeEncoderState(0);
+    ChangeEncoderState(0);
 
     /*
     short* testpcm;
