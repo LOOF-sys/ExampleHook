@@ -5,10 +5,16 @@
 #include <windows.h>
 #include "ntdll.h"
 
-void* BaseAddress = nullptr;
-uint64_t LoadedModuleSize = 0;
+extern void* DiscordBaseAddress;
+extern uint64_t DiscordModuleSize;
 
 #define MS_VC_EXCEPTION 0x406D1388
+
+struct SEH_GUARDED_REGION
+{
+	void* VirtualAddress;
+	uint64_t VirtualSize;
+};
 
 std::string GetExceptionCodeAsString(DWORD Code)
 {
@@ -83,9 +89,9 @@ void AnalyzeStack(std::string &crashlog, void* StackAddress)
 	crashlog = crashlog + "Last 10 elements of the stack:\n{\n";
 	for (uint8_t i = 0; i < 10; i++)
 	{
-		if (values[i] >= BaseAddress && ((uintptr_t)BaseAddress + LoadedModuleSize) >= (uintptr_t)values[i])
+		if (values[i] >= DiscordBaseAddress && ((uintptr_t)DiscordBaseAddress + DiscordModuleSize) >= (uintptr_t)values[i])
 		{
-			crashlog = crashlog + "     [+" +std::to_string(i * 8) + "] ExampleHook+0x" + std::format("{:x}", (uint64_t)values[i] - (uint64_t)BaseAddress) + ",\n";
+			crashlog = crashlog + "     [+" +std::to_string(i * 8) + "] ExampleHook+0x" + std::format("{:x}", (uint64_t)values[i] - (uint64_t)DiscordBaseAddress) + ",\n";
 			continue;
 		}
 		crashlog = crashlog + "     [+" + std::to_string(i * 8) + "] " + std::format("{:x}", (uint64_t)values[i]) + ",\n";
@@ -114,6 +120,7 @@ extern "C" void ChangeEncoderState(bool PreEncoding) { for (uint8_t i = 0; i < e
 
 bool Crashed = false;
 extern "C" void ReportError(LPCSTR Error);
+std::vector<SEH_GUARDED_REGION> SEH_guarded_sections = {};
 LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 {
 	if (ExceptionPointers->ExceptionRecord->ExceptionCode == MS_VC_EXCEPTION) return 0;
@@ -130,7 +137,19 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 		}
 	}
 
-	if (GetExceptionCodeAsString(ExceptionPointers->ExceptionRecord->ExceptionCode) != "UNDEFINED" || (ExceptionPointers->ExceptionRecord->ExceptionAddress >= BaseAddress && ((uint64_t)BaseAddress) + LoadedModuleSize >= (uint64_t)ExceptionPointers->ExceptionRecord->ExceptionAddress))
+	// SEH guarded regions
+	if (ExceptionPointers->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
+	{
+		for (uint16_t i = 0; i < SEH_guarded_sections.size(); i++)
+		{
+			if (ExceptionPointers->ExceptionRecord->ExceptionAddress > SEH_guarded_sections[i].VirtualAddress && (void*)((uintptr_t)SEH_guarded_sections[i].VirtualAddress + SEH_guarded_sections[i].VirtualSize) > ExceptionPointers->ExceptionRecord->ExceptionAddress)
+			{
+				return EXCEPTION_CONTINUE_EXECUTION;
+			}
+		}
+	}
+
+	if (GetExceptionCodeAsString(ExceptionPointers->ExceptionRecord->ExceptionCode) != "UNDEFINED" || (ExceptionPointers->ExceptionRecord->ExceptionAddress >= DiscordBaseAddress && ((uint64_t)DiscordBaseAddress) + DiscordModuleSize >= (uint64_t)ExceptionPointers->ExceptionRecord->ExceptionAddress))
 	{
 		SYSTEMTIME SystemTime = {};
 		GetSystemTime(&SystemTime);
@@ -144,7 +163,7 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 			return 0;
 		}
 
-		std::string crashlog = "Crash Report\nCurrent BaseAddress: 0x" + std::format("{:x}", (uint64_t)BaseAddress) + ", ImageSize: 0x" + std::format("{:x}", LoadedModuleSize) + "\nException Code: " + GetExceptionCodeAsString(ExceptionPointers->ExceptionRecord->ExceptionCode) + "\n";
+		std::string crashlog = "Crash Report\nCurrent DiscordBaseAddress: 0x" + std::format("{:x}", (uint64_t)DiscordBaseAddress) + ", ImageSize: 0x" + std::format("{:x}", DiscordModuleSize) + "\nException Code: " + GetExceptionCodeAsString(ExceptionPointers->ExceptionRecord->ExceptionCode) + "\n";
 		auto StackAddress = (void*)ExceptionPointers->ContextRecord->Rsp;
 		void* ExceptionAddress = ExceptionPointers->ExceptionRecord->ExceptionAddress;
 		if (ExceptionPointers->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
@@ -152,7 +171,7 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 			auto PageFaultAddress = (void*)ExceptionPointers->ExceptionRecord->ExceptionInformation[1];
 			crashlog = crashlog + "Page Fault access (not instruction) occured at 0x" + std::format("{:x}", (uint64_t)PageFaultAddress) + "\n";
 		}
-		crashlog = crashlog + "Instruction that caused exception located at ExampleHook+0x" + std::format("{:x}", (uint64_t)ExceptionAddress - (uint64_t)BaseAddress) + "\n";
+		crashlog = crashlog + "Instruction that caused exception located at ExampleHook+0x" + std::format("{:x}", (uint64_t)ExceptionAddress - (uint64_t)DiscordBaseAddress) + "\n";
 		AnalyzeStack(crashlog, StackAddress);
 		crashlog = crashlog + "rsp: " + std::format("{:x}", (uint64_t)ExceptionPointers->ContextRecord->Rsp) + "\n";
 		crashlog = crashlog + "rax: 0x" + std::format("{:x}", (uint64_t)ExceptionPointers->ContextRecord->Rax) + "\n";
@@ -184,8 +203,8 @@ LONG VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionPointers)
 
 void SetupExceptionHandler(HMODULE ExampleHook, uint64_t ImageSize)
 {
-	BaseAddress = ExampleHook;
-	LoadedModuleSize = ImageSize;
+	DiscordBaseAddress = ExampleHook;
+	DiscordModuleSize = ImageSize;
 	VoiceEncoderThreads = (PDWORD)VirtualAlloc(nullptr, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 	VoiceEncoderStates = (bool*)VirtualAlloc(nullptr, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 	if (!VoiceEncoderThreads || !VoiceEncoderStates)

@@ -2412,7 +2412,8 @@ opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_fram
 
     ChangeEncoderState(1);
     //if (!IsPrimaryVoiceThread()) printf("pre-encode: %p, %p, %p, %i, %i, %i, %i\n", st, pcm, data, data[max_data_bytes], frame_size, analysis_frame_size, st->channels);
-    ret = opus_encode_native(st, in, frame_size, data, max_data_bytes, 24, pcm, analysis_frame_size, 0, -2, st->channels, downmix_int, 1);
+    ret = opus_encode_native(st, in, frame_size, data, max_data_bytes, 16, pcm, analysis_frame_size, 0, -2, st->channels, downmix_int, 0);
+    //printf("encoder called %i, %i, %i, %i, %i\n", analysis_frame_size, frame_size, ret, max_data_bytes, GetSystemMs());
     //if (!IsPrimaryVoiceThread()) printf("post-encode: %p, %p, %p, %i, %i, %i, %i\n", st, pcm, data, data[max_data_bytes], frame_size, analysis_frame_size, st->channels);
     ChangeEncoderState(0);
 

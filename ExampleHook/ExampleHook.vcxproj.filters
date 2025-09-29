@@ -22,6 +22,9 @@
     <Filter Include="libraries\opus">
       <UniqueIdentifier>{148fcfa3-e19b-4fbb-a70e-7874ee83a960}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\scheduler">
+      <UniqueIdentifier>{b85cd5aa-9da1-423a-8d5a-6a2d279c2460}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -582,6 +585,9 @@
     <ClCompile Include="opus\celt\x86\x86cpu.c">
       <Filter>libraries\opus</Filter>
     </ClCompile>
+    <ClCompile Include="scheduler.cpp">
+      <Filter>source\scheduler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ntdll.h">
@@ -902,5 +908,13 @@
     <ClInclude Include="opus\celt\x86\x86cpu.h">
       <Filter>libraries\opus</Filter>
     </ClInclude>
+    <ClInclude Include="scheduler.hpp">
+      <Filter>source\scheduler</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="scheduler_asm.asm">
+      <Filter>source\scheduler</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

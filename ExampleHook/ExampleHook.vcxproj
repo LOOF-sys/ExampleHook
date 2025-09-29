@@ -203,6 +203,7 @@
     <ClCompile Include="opus\src\opus_projection_decoder.c" />
     <ClCompile Include="opus\src\opus_projection_encoder.c" />
     <ClCompile Include="opus\src\repacketizer.c" />
+    <ClCompile Include="scheduler.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
@@ -313,6 +314,12 @@
     <ClInclude Include="opus\src\opus_private.h" />
     <ClInclude Include="opus\src\tansig_table.h" />
     <ClInclude Include="opus\version.h" />
+    <ClInclude Include="scheduler.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="scheduler_asm.asm">
+      <FileType>Document</FileType>
+    </MASM>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -350,6 +357,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -444,5 +452,6 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
 </Project>

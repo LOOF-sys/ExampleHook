@@ -5,6 +5,8 @@
 #include "imgui/imgui_impl_win32.h"
 #include "imgui/imgui_impl_dx11.h"
 
+#define C6031(value) C6031_resolve = (void*)value
+
 static ID3D11Device* g_pd3dDevice = nullptr;
 static ID3D11DeviceContext* g_pd3dDeviceContext = nullptr;
 static IDXGISwapChain* g_pSwapChain = nullptr;
@@ -72,6 +74,13 @@ float GetPacketLossRate()
     return PacketLossRate;
 }
 
+int PacketSkipRate = 100;
+bool PacketSkippingDisabled = false;
+int GetPacketSkipRate()
+{
+    return PacketSkipRate;
+}
+
 void RenderWindow()
 {
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandleA(nullptr), nullptr, nullptr, nullptr, nullptr, (L"Example Hook"), nullptr };
@@ -84,6 +93,8 @@ void RenderWindow()
     SetWindowLongA(hwnd, GWL_EXSTYLE, WindowStyle);
     ShowWindow(hwnd, SW_SHOW);
     SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+
+    void* C6031_resolve;
 
     // Initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
@@ -175,6 +186,8 @@ void RenderWindow()
             ImGui::Text("Audio Packet");
             ImGui::SliderInt("Packet Bitrate", &PacketBitrate, 8000, 248000, "%d", ImGuiSliderFlags_AlwaysClamp);
             ImGui::SliderFloat("Packet Loss Rate", (float*)&PacketLossRate, 0, 1, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+            if (!PacketSkippingDisabled) ImGui::SliderInt("Packet Skip Rate", &PacketSkipRate, 2, 200, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::Checkbox("Disable Packet Skipping", &PacketSkippingDisabled);
             ImGui::Text("For \"Packet Bitrate\" to apply, mute and then unmute your mic on discord");
             ImGui::NewLine();
             ImGui::Text("Generic");
@@ -191,17 +204,14 @@ void RenderWindow()
                             continue;
                         }
                     }
-                    freopen(("conin$"), ("r"), stdin);
-                    freopen(("conout$"), ("w"), stdout);
-                    freopen(("conout$"), ("w"), stderr);
+                    C6031(freopen("conin$", "r", stdin));
+                    C6031(freopen("conout$", "w", stdout));
+                    C6031(freopen("conout$", "w", stderr));
                     printf("console enabled\n");
                 }
                 else // console disabled
                 {
                     FreeConsole();
-                    fclose(stdin);
-                    fclose(stdout);
-                    fclose(stderr);
                 }
             }
             ImGui::Checkbox("Hide Window", &HiddenWindow);
@@ -212,6 +222,8 @@ void RenderWindow()
             else SetWindowDisplayAffinity(hwnd, WDA_NONE);
             ImGui::End();
         }
+
+        if (PacketSkippingDisabled) PacketSkipRate = UINT64_MAX;
 
         // Rendering
         ImGui::Render();

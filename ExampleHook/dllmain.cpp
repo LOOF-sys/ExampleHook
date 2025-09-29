@@ -9,6 +9,7 @@
 #include "opus.h"
 #include "minhook/MinHook.h"
 #include "exceptions.hpp"
+#include "scheduler.hpp"
 
 // set this to 0 if you are manual mapping
 #define STANDARD_INJECTION 1
@@ -93,6 +94,11 @@ return ret;
 }
 */
 
+void* DiscordBaseAddress = nullptr;
+uint64_t DiscordModuleSize = 0;
+void* VoiceModuleBaseAddress = nullptr;
+uint64_t VoiceModuleSize = 0;
+
 int stdmemcmp(const void* Memory1, const void* Memory2, unsigned long long length);
 char* stdstrstr(const void* Memory1, const void* Memory2, unsigned long long length, unsigned long long segment_length);
 wchar_t* wstdstrstr(const void* Memory1, const void* Memory2, unsigned long long length, unsigned long long segment_length);
@@ -133,7 +139,6 @@ extern "C" int GetSystemMs()
     return Time.wMilliseconds;
 }
 
-
 bool EnableUI = false;
 LoadLibraryExW_t oLoadLibraryExW;
 HMODULE __stdcall LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
@@ -157,6 +162,7 @@ HMODULE __stdcall LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD 
     PREVIOUS_PROT Entry = { MemoryInfo.BaseAddress, MemoryInfo.RegionSize, 0 };
     VirtualProtect(MemoryInfo.BaseAddress, MemoryInfo.RegionSize, PAGE_EXECUTE_READWRITE, &Entry.Protection);
     PreviousProtections.push_back(Entry);
+
     if (MH_CreateHook((void*)((uintptr_t)VoiceModule + offsets::opus_encode()), opus_encode, NULL) != MH_OK)
     {
         ReportError("opus_encode could not be detoured");
@@ -197,6 +203,12 @@ HMODULE __stdcall LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD 
     if (!InitializeNodeApiHooks(Discord))
     {
         ReportError("failed to enable properties of voice node");
+        return {};
+    }
+
+    if (!InitializeScheduler(VoiceModule))
+    {
+        ReportError("failed to initialize voice scheduler hooks");
         return {};
     }
 
@@ -308,7 +320,7 @@ void MainFunction(HMODULE ExampleHook)
         return;
     }
 
-    while (!EnableUI) Sleep(1000);
+    while (!EnableUI) Sleep(10);
     DWORD ProcessId = GetCurrentProcessId();
     if (!AttachConsole(ProcessId) && GetLastError() != ERROR_ACCESS_DENIED)
     {

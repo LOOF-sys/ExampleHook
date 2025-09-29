@@ -73,6 +73,7 @@ uint64_t napi_get_value_int32hook(napi_env* env, napi_value* value, int32_t* res
 }
 
 napi_value* channels_object = {};
+napi_value* ssrc_object = {};
 uint64_t napi_get_value_uint32hook(napi_env* env, napi_value* value, uint32_t* result)
 {
 	if (value && value == (PVOID)channels_object)
@@ -80,6 +81,12 @@ uint64_t napi_get_value_uint32hook(napi_env* env, napi_value* value, uint32_t* r
 		_printf("channels spoofed\n");
 		*result = 2;
 		return 0;
+	}
+	if (value && value == (PVOID)ssrc_object)
+	{
+		uint64_t ret = napi_get_value_uint32(env, value, result);
+		printf("found ssrc %lu\n", *result);
+		return ret;
 	}
 	//_printf("converted uint32_t\n");
 	return napi_get_value_uint32(env, value, result);
@@ -119,6 +126,7 @@ uint64_t napi_get_named_propertyhook(napi_env* env, napi_value* object, const ch
 	if (!strcmp(name, "channels")) channels_object = *result;
 	if (!strcmp(name, "fec")) fec_object = *result;
 	if (!strcmp(name, "packetLossRate")) packetloss_object = *result;
+	if (!strcmp(name, "ssrc")) ssrc_object = *result;
 	return Return;
 }
 
