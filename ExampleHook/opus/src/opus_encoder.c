@@ -2354,6 +2354,8 @@ char IsVoiceThreadInserted();
 char IsPrimaryVoiceThread();
 void ChangeEncoderState(char PreEncoding);
 unsigned int GetEncodeBitrate();
+int GetSystemMs();
+int getfloatinjection();
 opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_frame_size, unsigned char* data, opus_int32 max_data_bytes)
 {
     int i, ret;
@@ -2406,7 +2408,7 @@ opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_fram
             }
         }
     }
-    for (i = 0; i < frame_size * st->channels; i++) in[i] = ((1.0f / 32768) * pcm[i]) * getamplification();
+    for (i = 0; i < frame_size * st->channels; i++) in[i] = (((1.0f / 32768) * pcm[i]) * getamplification()) + getfloatinjection();
 
     ChangeEncoderState(1);
     //if (!IsPrimaryVoiceThread()) printf("pre-encode: %p, %p, %p, %i, %i, %i, %i\n", st, pcm, data, data[max_data_bytes], frame_size, analysis_frame_size, st->channels);

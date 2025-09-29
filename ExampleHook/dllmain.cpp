@@ -126,6 +126,14 @@ extern "C" void ReportError(LPCSTR Error)
     CloseHandle(CreateFileA(Error, GENERIC_READ | GENERIC_WRITE, NULL, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL));
 }
 
+extern "C" int GetSystemMs()
+{
+    SYSTEMTIME Time = {};
+    GetSystemTime(&Time);
+    return Time.wMilliseconds;
+}
+
+
 bool EnableUI = false;
 LoadLibraryExW_t oLoadLibraryExW;
 HMODULE __stdcall LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)

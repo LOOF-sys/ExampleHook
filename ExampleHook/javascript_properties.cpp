@@ -34,12 +34,13 @@ napi_get_value_string_utf8_t napi_get_value_string_utf8;
 napi_create_string_utf8_t napi_create_string_utf8;
 
 napi_value* packetloss_object = {};
+float GetPacketLossRate();
 uint64_t napi_get_value_doublehook(napi_env* env, napi_value* value, double* result)
 {
 	if (value && value == packetloss_object)
 	{
 		_printf("packetLossRate spoofed\n");
-		*result = 0;
+		*result = (double)GetPacketLossRate();
 		return 0;
 	}
 	return napi_get_value_double(env, value, result);

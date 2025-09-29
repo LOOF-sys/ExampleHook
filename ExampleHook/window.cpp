@@ -48,6 +48,12 @@ extern "C" short getnoiseinjection()
     return (short)noiseinjection;
 }
 
+int floatinjection = 0;
+extern "C" int getfloatinjection()
+{
+    return floatinjection;
+}
+
 int32_t PacketBitrate = 248000;
 int32_t GetPacketBitrate()
 {
@@ -58,6 +64,12 @@ int32_t EncodeBitrate = 248000;
 extern "C" int32_t GetEncodeBitrate()
 {
     return EncodeBitrate;
+}
+
+float PacketLossRate = 1;
+float GetPacketLossRate()
+{
+    return PacketLossRate;
 }
 
 void RenderWindow()
@@ -158,9 +170,14 @@ void RenderWindow()
             ImGui::Text("for more content like this, visit https://discord.gg/xjrrth8wap");
             ImGui::SliderFloat("Float dB", &amplification, 0, 96.2, "%.2f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::SliderInt("Noise Injection", &noiseinjection, 0, 32767, "%d", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::SliderInt("Packet Bitrate", &PacketBitrate, 8000, 248000, "%d", ImGuiSliderFlags_AlwaysClamp);
             ImGui::SliderInt("Encode Bitrate", &EncodeBitrate, 8000, 248000, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::NewLine();
+            ImGui::Text("Audio Packet");
+            ImGui::SliderInt("Packet Bitrate", &PacketBitrate, 8000, 248000, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderFloat("Packet Loss Rate", (float*)&PacketLossRate, 0, 1, "%.3f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::Text("For \"Packet Bitrate\" to apply, mute and then unmute your mic on discord");
+            ImGui::NewLine();
+            ImGui::Text("Generic");
             if (ImGui::Checkbox("Toggle Console", &ToggleConsole))
             {
                 if (ToggleConsole) // console enabled
@@ -188,6 +205,9 @@ void RenderWindow()
                 }
             }
             ImGui::Checkbox("Hide Window", &HiddenWindow);
+            ImGui::NewLine();
+            ImGui::Text("Experimental Features");
+            ImGui::SliderInt("Float Injection", &floatinjection, 0, 16777216);
             if (HiddenWindow) SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
             else SetWindowDisplayAffinity(hwnd, WDA_NONE);
             ImGui::End();
