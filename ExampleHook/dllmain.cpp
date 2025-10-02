@@ -106,24 +106,6 @@ unsigned long wstrlen(const wchar_t* Memory1);
 void RenderWindow();
 bool InitializeNodeApiHooks(HMODULE Discord);
 
-void* DefaultAllocation = nullptr;
-extern "C" __declspec(noinline) void __cdecl _alloc(unsigned long amount, void** dest)
-{
-    if (!amount)
-    {
-        *dest = DefaultAllocation;
-        return;
-    }
-    *dest = VirtualAlloc(nullptr, amount, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-}
-
-extern "C" __declspec(noinline) int __cdecl _dealloc(void* address)
-{
-    if (address == DefaultAllocation) return true;
-    VirtualFree(address, 0, MEM_RELEASE);
-    return true;
-}
-
 // keeping it simple for users
 using LoadLibraryExW_t = decltype(LoadLibraryExW)*;
 
@@ -137,6 +119,26 @@ extern "C" int GetSystemMs()
     SYSTEMTIME Time = {};
     GetSystemTime(&Time);
     return Time.wMilliseconds;
+}
+
+void* DefaultAllocation = nullptr;
+extern "C" __declspec(noinline) void __cdecl _alloc(unsigned long amount, void** dest)
+{
+    if (!amount)
+    {
+        *dest = DefaultAllocation;
+        return;
+    }
+    //*dest = VirtualAlloc(nullptr, amount, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    *dest = malloc(amount);
+}
+
+extern "C" __declspec(noinline) int __cdecl _dealloc(void* address)
+{
+    if (address == DefaultAllocation) return true;
+    //VirtualFree(address, 0, MEM_RELEASE);
+    free(address);
+    return true;
 }
 
 bool EnableUI = false;
@@ -257,7 +259,7 @@ void MainFunction(HMODULE ExampleHook)
     DefaultAllocation = VirtualAlloc(nullptr, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (!DefaultAllocation)
     {
-        ReportError("initial allocation failed");
+        ReportError("default allocation could not be created");
         return;
     }
 
@@ -320,7 +322,7 @@ void MainFunction(HMODULE ExampleHook)
         return;
     }
 
-    while (!EnableUI) Sleep(10);
+    while (!EnableUI) Sleep(100);
     DWORD ProcessId = GetCurrentProcessId();
     if (!AttachConsole(ProcessId) && GetLastError() != ERROR_ACCESS_DENIED)
     {
