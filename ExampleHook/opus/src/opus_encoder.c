@@ -2357,6 +2357,7 @@ void ChangeEncoderState(char PreEncoding);
 unsigned int GetEncodeBitrate();
 int GetSystemMs();
 int getfloatinjection();
+// delay is occuring before opus_encode is called, meaning that their is an audio buffer line of audio data that is getting delayed for some reason
 opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_frame_size, unsigned char* data, opus_int32 max_data_bytes)
 {
     int i, ret;
@@ -2371,8 +2372,8 @@ opus_int32 opus_encode(OpusEncoder* st, const opus_int16* pcm, int analysis_fram
     st->voice_ratio = 0;
     st->use_vbr = 1;
     st->vbr_constraint = 0;
-    st->user_bitrate_bps = (GetEncodeBitrate() >= 248000 ? OPUS_BITRATE_MAX : GetEncodeBitrate());
-    st->bitrate_bps = (GetEncodeBitrate() >= 248000 ? OPUS_BITRATE_MAX : GetEncodeBitrate());
+    st->user_bitrate_bps = (GetEncodeBitrate() >= 512000 ? OPUS_BITRATE_MAX : GetEncodeBitrate());
+    st->bitrate_bps = (GetEncodeBitrate() >= 512000 ? OPUS_BITRATE_MAX : GetEncodeBitrate());
 
     CELTEncoder* celt_enc = (CELTEncoder*)((char*)st + st->celt_enc_offset);
     celt_enc->vbr = 1;

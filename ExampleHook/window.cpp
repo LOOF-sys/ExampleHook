@@ -62,7 +62,7 @@ int32_t GetPacketBitrate()
     return PacketBitrate;
 }
 
-int32_t EncodeBitrate = 248000;
+int32_t EncodeBitrate = 512000;
 extern "C" int32_t GetEncodeBitrate()
 {
     return EncodeBitrate;
@@ -74,7 +74,7 @@ float GetPacketLossRate()
     return PacketLossRate;
 }
 
-int PacketSkipRate = 100;
+int PacketSkipRate = 300;
 bool PacketSkippingDisabled = false;
 int GetPacketSkipRate()
 {
@@ -181,12 +181,12 @@ void RenderWindow()
             ImGui::Text("for more content like this, visit https://discord.gg/xjrrth8wap");
             ImGui::SliderFloat("Float dB", &amplification, 0, 96.2, "%.2f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::SliderInt("Noise Injection", &noiseinjection, 0, 32767, "%d", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::SliderInt("Encode Bitrate", &EncodeBitrate, 8000, 248000, "%d", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderInt("Encode Bitrate", &EncodeBitrate, 8000, 512000, "%d", ImGuiSliderFlags_AlwaysClamp);
             ImGui::NewLine();
             ImGui::Text("Audio Packet");
             ImGui::SliderInt("Packet Bitrate", &PacketBitrate, 8000, 248000, "%d", ImGuiSliderFlags_AlwaysClamp);
             ImGui::SliderFloat("Packet Loss Rate", (float*)&PacketLossRate, 0, 1, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-            if (!PacketSkippingDisabled) ImGui::SliderInt("Packet Skip Rate", &PacketSkipRate, 2, 200, "%d", ImGuiSliderFlags_AlwaysClamp);
+            if (!PacketSkippingDisabled) ImGui::SliderInt("Packet Acceptance Rate", &PacketSkipRate, 2, 300, "%d", ImGuiSliderFlags_AlwaysClamp);
             ImGui::Checkbox("Disable Packet Skipping", &PacketSkippingDisabled);
             ImGui::Text("For \"Packet Bitrate\" to apply, mute and then unmute your mic on discord");
             ImGui::NewLine();
