@@ -1,5 +1,5 @@
 ### example for a discord voice hook
-- for more information on this, visit https://discord.gg/cYmDTyeq9d
+- for more information on this, visit https://discord.gg/xjrrth8wap
 
 discord is `wcypher`
 
