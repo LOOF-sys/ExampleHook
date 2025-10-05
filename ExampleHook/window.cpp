@@ -137,6 +137,11 @@ void LoadIniConfig()
             if (value > 0 && value <= 300) PacketSkipRate = value;
         }
     }
+    else
+    {
+        PacketSkipRate = -1;
+        PacketSkippingDisabled = true;
+    }
 
     // packet loss rate (1-1000)
     TextLine = IniFile.GetLineByName("pac_loss");
