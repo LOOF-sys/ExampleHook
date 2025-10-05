@@ -4,6 +4,10 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_win32.h"
 #include "imgui/imgui_impl_dx11.h"
+#include "ini.hpp"
+
+// this can be set to a directory instead of a default file name from Discord.exe path
+#define CONFIGURATION_FILE "config.ini"
 
 #define C6031(value) C6031_resolve = (void*)value
 
@@ -20,6 +24,7 @@ void CleanupDeviceD3D();
 void CreateRenderTarget();
 void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 
 /*
 MOST OF THIS IS PASTED FROM AETHERCORD
@@ -81,6 +86,67 @@ int GetPacketSkipRate()
     return PacketSkipRate;
 }
 
+void LoadIniConfig()
+{
+    IniParser IniFile = CONFIGURATION_FILE;
+    if (!IniFile.IsInitialized()) return;
+
+    PTEXTLINE TextLine = IniFile.GetLineByName("float"); // does not support double/floats, only integers
+    if (TextLine->Value)
+    {
+        auto value = (uint64_t)TextLine->Value;
+        if (value > 0 && value < 120) amplification = (float)(uint64_t)TextLine->Value;
+    }
+
+    // float injection starting value
+    TextLine = IniFile.GetLineByName("float2");
+    if (TextLine->Value) floatinjection = (int)TextLine->Value;
+
+    // noiseinjection starting value
+    TextLine = IniFile.GetLineByName("noise");
+    if (TextLine->Value)
+    {
+        auto value = (uint64_t)TextLine->Value;
+        if (value > 0 && value < 32768) noiseinjection = value;
+    }
+
+    // encoder bitrate
+    TextLine = IniFile.GetLineByName("enc_bitrate");
+    if (TextLine->Value)
+    {
+        auto value = (uint64_t)TextLine->Value;
+        if (value > 0 && value <= 5120000) EncodeBitrate = value;
+    }
+
+    // packet bitrate
+    TextLine = IniFile.GetLineByName("pac_bitrate");
+    if (TextLine->Value)
+    {
+        auto value = (uint64_t)TextLine->Value;
+        if (value > 0 && value <= 248000) PacketBitrate = value;
+    }
+
+    // packet bitrate
+    TextLine = IniFile.GetLineByName("pac_skipping_disabled");
+    if (!TextLine->Value)
+    {
+        PTEXTLINE PacketSkipping = IniFile.GetLineByName("pac_skipping_rate");
+        if (PacketSkipping->Value)
+        {
+            auto value = (uint64_t)PacketSkipping->Value;
+            if (value > 0 && value <= 300) PacketSkipRate = value;
+        }
+    }
+
+    // packet loss rate (1-1000)
+    TextLine = IniFile.GetLineByName("pac_loss");
+    if (TextLine->Value)
+    {
+        auto value = (uint64_t)TextLine->Value;
+        if (value > 0 && value <= 1000) PacketLossRate = (float)value / 1000;
+    }
+}
+
 void RenderWindow()
 {
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandleA(nullptr), nullptr, nullptr, nullptr, nullptr, (L"Example Hook"), nullptr };
@@ -93,6 +159,7 @@ void RenderWindow()
     SetWindowLongA(hwnd, GWL_EXSTYLE, WindowStyle);
     ShowWindow(hwnd, SW_SHOW);
     SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+    LoadIniConfig();
 
     void* C6031_resolve;
 
@@ -165,8 +232,9 @@ void RenderWindow()
         ImGui::NewFrame();
 
         // change these strings and add/remove features
-        if (ImGui::Begin("Example Hook | https://github.com/LOOF-sys", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysVerticalScrollbar))
+        if (ImGui::Begin("Example Hook | https://github.com/LOOF-sys | wcypher on discord", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysVerticalScrollbar))
         {
+            ImGui::StyleColorsCustom(0);
             RECT WindowRectangle = {};
             if (GetWindowRect(hwnd, &WindowRectangle))
             {

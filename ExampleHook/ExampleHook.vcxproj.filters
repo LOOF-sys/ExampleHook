@@ -911,6 +911,9 @@
     <ClInclude Include="scheduler.hpp">
       <Filter>source\scheduler</Filter>
     </ClInclude>
+    <ClInclude Include="ini.hpp">
+      <Filter>libraries</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="scheduler_asm.asm">
