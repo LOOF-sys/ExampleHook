@@ -5,6 +5,7 @@
 
 #define HOOK_DLL_NAME "ExampleHook.dll"
 
+// standard injection, use hidden injector for manual map
 int main()
 {
 	// comment for beginners: this is used to check if the dll is located in the current directory
@@ -89,11 +90,12 @@ int main()
 					continue;
 				}
 				Injected.push_back(ProcessEntry.th32ProcessID);
+				CloseHandle(Process);
 
 				std::cout << "Injected " << ProcessEntry.th32ProcessID << std::endl;
 			}
 		}
-
+		CloseHandle(Snapshot);
 		Sleep(10);
 	}
 }

@@ -10,9 +10,12 @@
 #include "minhook/MinHook.h"
 #include "exceptions.hpp"
 #include "scheduler.hpp"
+#include "ini.hpp"
+
+#define BOOT_CONFIG "boot.ini"
 
 // set this to 0 if you are manual mapping
-#define STANDARD_INJECTION 1
+#define STANDARD_INJECTION 0
 
 struct PREVIOUS_PROT
 {
@@ -250,6 +253,8 @@ BOOLEAN RtlFreeHeapHook(PVOID HeapHandle, ULONG Flags, PVOID BaseAddress)
     return result;
 }
 
+bool UseConfigurationOnly = false;
+
 // dll notifications will not be used for this example
 void RenderWindow();
 void MainFunction(HMODULE ExampleHook)
@@ -316,6 +321,7 @@ void MainFunction(HMODULE ExampleHook)
         return;
     }
     */
+
     if (MH_EnableHook(MH_ALL_HOOKS) != MH_OK)
     {
         ReportError("Failed to write LoadLibraryExW hook");
@@ -323,20 +329,34 @@ void MainFunction(HMODULE ExampleHook)
     }
 
     while (!EnableUI) Sleep(100);
-    DWORD ProcessId = GetCurrentProcessId();
-    if (!AttachConsole(ProcessId) && GetLastError() != ERROR_ACCESS_DENIED)
-    {
-        if (!AllocConsole())
-        {
-            //MessageBoxA(NULL, xorstr("Failed to allocate console"), xorstr("Discord"), MB_ICONERROR);
-            return;
-        }
-    }
-    freopen(("conin$"), ("r"), stdin);
-    freopen(("conout$"), ("w"), stdout);
-    freopen(("conout$"), ("w"), stderr);
 
-#ifdef STANDARD_INJECTION
+    int VirtualKey = VK_F2;
+    bool DisableConsole = false;
+    IniParser BootConfig = BOOT_CONFIG;
+    if (BootConfig.IsInitialized())
+    {
+        DisableConsole = BootConfig.GetLineByName("disable_console")->Value;
+        UseConfigurationOnly = BootConfig.GetLineByName("use_config_only")->Value;
+        if (BootConfig.GetLineByName("keybind")->Value) VirtualKey = (int)BootConfig.GetLineByName("keybind")->Value;
+    }
+
+    if (!DisableConsole)
+    {
+        DWORD ProcessId = GetCurrentProcessId();
+        if (!AttachConsole(ProcessId) && GetLastError() != ERROR_ACCESS_DENIED)
+        {
+            if (!AllocConsole())
+            {
+                //MessageBoxA(NULL, xorstr("Failed to allocate console"), xorstr("Discord"), MB_ICONERROR);
+                return;
+            }
+        }
+        freopen(("conin$"), ("r"), stdin);
+        freopen(("conout$"), ("w"), stdout);
+        freopen(("conout$"), ("w"), stderr);
+    }
+
+#if STANDARD_INJECTION
     MODULEINFO ExampleHookInfo = {};
     if (!K32GetModuleInformation(NtCurrentProcess, ExampleHook, &ExampleHookInfo, sizeof(ExampleHookInfo)))
     {
@@ -351,7 +371,7 @@ void MainFunction(HMODULE ExampleHook)
 
     while (true)
     {
-        if (EnableUI && GetKeyState(VK_F2) & 0x8000) RenderWindow();
+        if (EnableUI && GetKeyState(VirtualKey) & 0x8000) RenderWindow();
         Sleep(10);
     }
 }

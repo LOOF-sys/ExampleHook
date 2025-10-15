@@ -1,0 +1,62 @@
+;
+; SystemMask.inf
+;
+
+[Version]
+Signature   = "$WINDOWS NT$"
+Class       = System ; TODO: specify appropriate Class
+ClassGuid   = {4d36e97d-e325-11ce-bfc1-08002be10318} ; TODO: specify appropriate ClassGuid
+Provider    = %ManufacturerName%
+CatalogFile = SystemMask.cat
+DriverVer   = ; TODO: set DriverVer in stampinf property pages
+PnpLockdown = 1
+
+[DestinationDirs]
+DefaultDestDir = 13
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+SystemMask.sys = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName% = Standard,NT$ARCH$.10.0...16299 ; %13% support introduced in build 16299
+
+[Standard.NT$ARCH$.10.0...16299]
+%SystemMask.DeviceDesc% = SystemMask_Device, Root\SystemMask ; TODO: edit hw-id
+
+[SystemMask_Device.NT]
+CopyFiles = File_Copy
+
+[File_Copy]
+SystemMask.sys
+
+;-------------- Service installation
+[SystemMask_Device.NT.Services]
+AddService = SystemMask,%SPSVCINST_ASSOCSERVICE%, SystemMask_Service_Inst
+
+; -------------- SystemMask driver install sections
+[SystemMask_Service_Inst]
+DisplayName    = %SystemMask.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %13%\SystemMask.sys
+
+[SystemMask_Device.NT.Wdf]
+KmdfService = SystemMask, SystemMask_wdfsect
+
+[SystemMask_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE = 0x00000002
+ManufacturerName = "<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+DiskName = "SystemMask Installation Disk"
+SystemMask.DeviceDesc = "SystemMask Device"
+SystemMask.SVCDESC = "SystemMask Service"
