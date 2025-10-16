@@ -3,7 +3,7 @@
 #include <tlhelp32.h>
 #include <vector>
 
-#define HOOK_DLL_NAME "ExampleHook.dll"
+#define HOOK_DLL_NAME "ExampleHookMm.dll"
 
 // standard injection, use hidden injector for manual map
 int main()

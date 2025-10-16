@@ -3,5 +3,6 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="manualmapper.cpp" />
+    <ClCompile Include="exports.cpp" />
   </ItemGroup>
 </Project>

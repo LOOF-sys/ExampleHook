@@ -11,7 +11,7 @@
 * for the actual hook, you can manual map it
 */
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 #if (DEBUG_MODE)
 #define _printf(...) printf(__VA_ARGS__)
 #else
@@ -20,9 +20,9 @@
 
 #define ANTI_SCAN_DLL "AntiScan.dll"
 #define DISCORD_PROCESS "Discord.exe"
-#define HOOK_DLL_NAME "ExampleHook.dll"
+#define HOOK_DLL_NAME "ExampleHookMm.dll"
 
-#define USE_OVERRIDE_PATH 1
+#define USE_OVERRIDE_PATH 0
 #if (USE_OVERRIDE_PATH)
 #define OVERRIDE_PATH "E:\\source\\repos\\ExampleHook\\x64\\Release\\"
 #endif
@@ -119,7 +119,7 @@ void AntiScan()
             // comment for beginners: get the path for the dll
 #if (USE_OVERRIDE_PATH)
             std::string LocalModulePath = OVERRIDE_PATH;
-            LocalModulePath = LocalModulePath + "AntiScan.dll";
+            LocalModulePath = LocalModulePath + ANTI_SCAN_DLL;
             if (!ManualMap(Process, LocalModulePath.c_str()))
             {
                 _printf("antiscan injection failed %s, %i, %s\n", ProcessEntry.szExeFile, ProcessEntry.th32ProcessID, LocalModulePath.c_str());
@@ -127,7 +127,7 @@ void AntiScan()
             }
 #else
             char LocalModulePath[MAX_PATH] = {};
-            if (!GetFullPathNameA(HOOK_DLL_NAME, MAX_PATH, LocalModulePath, NULL)) continue;
+            if (!GetFullPathNameA(ANTI_SCAN_DLL, MAX_PATH, LocalModulePath, NULL)) continue;
             if (!ManualMap(Process, LocalModulePath)) continue;
 #endif
             _printf("antiscan injected %s, %i, %s", ProcessEntry.szExeFile, ProcessEntry.th32ProcessID, LocalModulePath.c_str());
@@ -190,7 +190,7 @@ void MainFunction()
 #else
 #if (USE_OVERRIDE_PATH)
                 std::string _LocalModulePath = OVERRIDE_PATH;
-                _LocalModulePath = _LocalModulePath + "ExampleHook.dll";
+                _LocalModulePath = _LocalModulePath + HOOK_DLL_NAME;
                 if (!ManualMap(Process, _LocalModulePath.c_str())) continue;
 #else
                 if (!ManualMap(Process, LocalModulePath)) continue;

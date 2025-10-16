@@ -150,6 +150,8 @@ void LoadIniConfig()
         auto value = (uint64_t)TextLine->Value;
         if (value > 0 && value <= 1000) PacketLossRate = (float)value / 1000;
     }
+
+    IniFile.discard();
 }
 
 void RenderWindow()

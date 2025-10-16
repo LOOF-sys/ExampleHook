@@ -12,10 +12,15 @@
 #include "scheduler.hpp"
 #include "ini.hpp"
 
+#define USING_BOOT_CONFIG_PATH 0
+#if (!USING_BOOT_CONFIG_PATH)
 #define BOOT_CONFIG "boot.ini"
+#else
+#define BOOT_CONFIG "C:\\boot.ini"
+#endif
 
 // set this to 0 if you are manual mapping
-#define STANDARD_INJECTION 0
+#define STANDARD_INJECTION 1
 
 struct PREVIOUS_PROT
 {
@@ -253,10 +258,9 @@ BOOLEAN RtlFreeHeapHook(PVOID HeapHandle, ULONG Flags, PVOID BaseAddress)
     return result;
 }
 
-bool UseConfigurationOnly = false;
-
 // dll notifications will not be used for this example
 void RenderWindow();
+void LoadIniConfig();
 void MainFunction(HMODULE ExampleHook)
 {
     MH_Initialize();
@@ -332,12 +336,14 @@ void MainFunction(HMODULE ExampleHook)
 
     int VirtualKey = VK_F2;
     bool DisableConsole = false;
+    bool UseConfigurationOnly = false;
     IniParser BootConfig = BOOT_CONFIG;
     if (BootConfig.IsInitialized())
     {
         DisableConsole = BootConfig.GetLineByName("disable_console")->Value;
         UseConfigurationOnly = BootConfig.GetLineByName("use_config_only")->Value;
         if (BootConfig.GetLineByName("keybind")->Value) VirtualKey = (int)BootConfig.GetLineByName("keybind")->Value;
+        BootConfig.discard();
     }
 
     if (!DisableConsole)
@@ -365,6 +371,12 @@ void MainFunction(HMODULE ExampleHook)
     }
     SetupExceptionHandler(ExampleHook, ExampleHookInfo.SizeOfImage);
 #endif
+
+    while (UseConfigurationOnly)
+    {
+        LoadIniConfig(); // reload ini forever
+        Sleep(10);
+    }
 
     // if you dont want your window to appear immediately just remove this code
     if (EnableUI) RenderWindow();
